@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block title %} Share Document {% endblock %}
+{% block contentIcon %}
+    bi-share
+{% endblock %}
+{% block contentTitle %}
+    Share Document
+{% endblock %}
+
+{% block content %}
+    <form method="post" id="shareForm">
+        {% csrf_token %}
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <p><strong>Title:</strong> {{ document.title }}</p>
+                </div>
+                <div class="mb-3">
+                    <p><strong>Document Number:</strong> {{ document.document_number }}</p>
+                </div>
+                <div class="mb-3">
+                    <p><strong>Uploaded by:</strong> {{ document.uploaded_by.first_name }} {{ document.uploaded_by.last_name }}</p>
+                </div>
+                <div class="mb-3">
+                    <p><strong>Category:</strong> {% if document.category %}{{ document.category.name }}{% else %}None{% endif %}</p>
+                </div>
+                <div class="mb-3">
+                    <p><strong>Privacy:</strong> {{ document.get_privacy_display }}</p>
+                </div>
+                <div class="mb-3">
+                    <p><strong>Doc. Owner: </strong>{% if document.owner %}{{ document.get_owner_name }}{% else %} External {% endif %}</p>
+                </div>
+                <div class="mb-3">
+                    <p><strong>Created Date:</strong> {% if document.created_date %}{{ document.created_date }}{% else %}None{% endif %}</p>
+                </div>
+                <div class="mb-3">
+                    <p><strong>Uploaded Date:</strong> {% if document.uploaded_date %}{{ document.uploaded_date }}{% else %}None{% endif %}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="shared_with"><strong>Share with:</strong></label>
+                    <select name="shared_with" id="shared_with" multiple class="form-select" style="width: 60%; height: 250px;">
+                        {% for user in users %}
+                            <option value="{{ user.id }}">
+                                {% if user.first_name or user.last_name %}
+                                    {{ user.first_name }} {{ user.last_name }}
+                                {% else %}
+                                    {{ user.username }}
+                                {% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex justify-content-center">
+                    <button type="submit" class="btn btn-primary me-2" style="width: 100px;">Share</button>
+                    <a href="{% url 'index' %}" class="btn btn-dark download-link" style="width: 100px;">
+                        <i class="bi bi-x-circle me-2"></i>Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Display Django messages as alerts
+        if (typeof djangoMessages !== 'undefined') {
+            djangoMessages.forEach(function(msg) {
+                alert(msg);
+            });
+        }
+
+        // Document privacy status
+        var documentPrivacy = "{{ document_privacy }}";
+
+        // Pre-process already shared user IDs
+        var alreadySharedUserIds = [
+            {% for shared_user in document.shared_with.all %}
+                "{{ shared_user.id }}",
+            {% endfor %}
+        ];
+
+        document.getElementById('shareForm').onsubmit = function(event) {
+            // Check if the document is private
+            if (documentPrivacy === 'private') {
+                event.preventDefault(); // Prevent form submission
+                alert("Private document cannot be shared!"); // Alert message
+                window.location.href = "{% url 'index' %}"; // Redirect to index after alert
+                return;
+
+            }
+
+            var sharedWith = document.getElementById('shared_with');
+            var selectedUsers = Array.from(sharedWith.selectedOptions);
+
+            // Check if users are selected
+            if (selectedUsers.length === 0) {
+                event.preventDefault(); // Prevent form submission
+                alert("Please select at least one user to share the document with!");
+                return;
+            }
+
+            // Check for already shared users
+            var alreadySharedUsers = [];
+            var newShareAllowed = true; // Flag to allow sharing
+
+            selectedUsers.forEach(function(option) {
+                var userId = option.value;
+
+                if (alreadySharedUserIds.includes(userId)) {
+                    alreadySharedUsers.push("The document has already been shared with " + option.text + "!");
+                    newShareAllowed = false; // Prevent sharing if any user is already shared
+                }
+            });
+
+            // Alerts for already shared users
+            if (alreadySharedUsers.length > 0) {
+                event.preventDefault(); // Prevent form submission
+                alreadySharedUsers.forEach(function(msg) {
+                    alert(msg);
+                });
+            }
+
+            // If no already shared users, display success message
+            if (newShareAllowed) {
+                alert("Document shared successfully!");
+            }
+
+            // Prevent form submission if there are no new shares allowed
+            if (!newShareAllowed) {
+                event.preventDefault(); // Prevent form submission
+            }
+        };
+    });
+</script>
+{% endblock %}

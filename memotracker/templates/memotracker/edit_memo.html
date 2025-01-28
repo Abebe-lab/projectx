@@ -1,0 +1,382 @@
+{% extends 'base.html' %}
+
+{% load static %}
+<script src="{% static 'ckeditor/ckeditor/ckeditor.js' %}"></script>
+<script src="{% static 'ckeditor/ckeditor/adapters/jquery.js' %}"></script>
+<link rel="stylesheet" href="{% static 'ckeditor/ckeditor/themes/default.css' %}">
+
+
+
+{% block title %} Edit Memo {% endblock %}
+{% block contentIcon %}
+    bi-pencil-square
+{% endblock %}
+{% block contentTitle %}
+    Edit Memo
+{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-center"></div>
+        <form action = "{% url 'edit_memo' memo.id %}" method="POST" id="createMemoForm">
+            {% csrf_token %}
+            {{ form.media }}
+            <div class="border rounded px-3 py-2 mb-3 d-flex align-items-center">
+                <div class="d-flex gap-2 align-items-center me-5" id="id_lang_section">
+                    <div class="form-check text-center">
+                        {{form.in_english}}
+                    </div>
+                    <label for="id_in_english" class="form-label mb-0">English</label>
+                </div>
+
+                <div class="d-flex gap-2 align-items-center me-5">
+                    <div class="form-check text-center">
+                        {{form.urgent}}
+                    </div>
+                    <label for="id_urgent" class="form-label mb-0">Urgent</label>
+                </div>
+
+                <div class="d-flex gap-2 align-items-center me-5">
+                    <div class="form-check" id="id_public">
+                        {{form.public}}
+                    </div>
+                    <label for="id_public" class="form-label mb-0">Public</label>
+                </div>
+                <div class="d-flex gap-2 align-items-center me-5" id="id_external_section">
+                    <div class="form-check text-center">
+                        {{form.to_external}}
+                    </div>
+                    <label for="id_to_external" class="form-label mb-0">External</label>
+                </div>
+
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label for="id_content_type" class="form-label" >Owner type:</label>
+                    {{form.content_type}}
+                    <input type="hidden" id="mySelectHidden" name="mySelectHidden">
+                </div>
+                <div class="col">
+                    <label for="id_reference_number" class="form-label" >Reference number:</label>
+                    {{form.reference_number}}
+                </div>
+                
+                <div class="col">
+                    <label for="id_memo_date" class="form-label" >Memo date:</label>
+                    {% if form.in_english == 'True' %}
+                        {{ form.memo_date }}
+                    {% else %}
+                        <input type="text" name="memo_date" id="id_memo_date" class="form-control mDate-input" required value="">
+                        <small><i class="bi bi-calendar mDate-icon d-none" id="memo_date_icon"></i></small>
+                    {% endif %}
+                </div>
+                <div class="col">
+                    <label for="id_due_date" class="form-label" >Due date:</label>
+                    {% if form.in_english == 'True' %}
+                        {{form.due_date}}
+                    {% else %}
+                        <input type="text" name="due_date" id="id_due_date" class="form-control mDate-input" value="">
+                        <small><i class="bi bi-calendar mDate-icon d-none" id="memo_dueDate_icon"></i></small>
+                    {% endif %}
+                </div>
+                <div class="col" id="followUp">
+                    <label for="id_assigned_to" class="form-label" >Follow up:</label>
+                    {{form.assigned_to}}
+                </div>
+            </div>
+
+            <div class="row mt-2 d-flex align-items-center">
+                <span>
+                    
+                </span>
+                
+                <div class="col-9 d-flex align-items-center gap-2">
+                    <label for="id_subject" class="form-label d-flex"> Subject: <span style="color: red;"> * </span> </label>
+                        {{form.subject}}
+                </div>
+
+{#                <div class="col-3 d-flex gap-3 align-self-end pr-4 justify-content-between">#}
+{#                        <div class="d-flex gap-1 flex-grow-1">#}
+{#                            <div class="form-check" id="id_public">#}
+{#                                {{form.public}}#}
+{#                            </div>#}
+{#                            <label for="id_public" class="form-label" >Public</label>#}
+{#                        </div>#}
+{#                        #}
+{#                        <div class="d-flex gap-1 flex-grow-1">#}
+{#                            <div class="form-check text-center">#}
+{#                                {{form.urgent}}#}
+{#                            </div>#}
+{#                            <label for="id_urgent" class="form-label" >Urgent</label>#}
+{#                        </div>#}
+{#                      #}
+{#            </div>#}
+
+            <div class="row mt-2">
+                <div class="d-flex justify-content-between">
+                    <strong> Content: <span style="color: red;"> * </span> </strong>
+{#                    <div class="d-flex gap-4 col-3 justify-content-between pl-4">#}
+{#                        <div class="d-flex gap-1 flex-grow-1" id="id_external_section">#}
+{#                            <div class="form-check text-center">#}
+{#                                {{form.to_external}}#}
+{#                            </div>#}
+{#                            <label for="id_to_external" class="form-label" >External</label>#}
+{#                        </div>#}
+{#                        <div class="d-flex gap-1 flex-grow-1" id="id_lang_section">#}
+{#                            <div class="form-check text-center">#}
+{#                                {{form.in_english}}#}
+{#                            </div>#}
+{#                            <label for="id_in_english" class="form-label" >English</label>#}
+{#                        </div>#}
+{#                    </div>#}
+                </div>
+                
+                {{form.content}}
+            </div>
+        </div>
+
+            <div class="d-flex gap-3 justify-content-end">
+                <a class='btn btn-secondary text-end mt-3' href="{% url 'draft_memo_list' %}"><i class="bi bi-x"></i> Cancel</a>
+                <button type="submit" id="updateMemoBtn" class="btn btn-success mt-3" onclick="resetMemoDate('saveDraft');" disabled>
+                    <i class="bi bi-file-earmark-plus"></i> Update Memo</button>
+                <a id="sendDraftInternalMemo"
+                        href="{% url 'memo_route_history' memo_id=memo.pk list_name=listName %}" title="Send Memo"
+                        class="btn visually-hidden mt-3 disabledAnchor">
+                    <i class="bi bi-send-check mx-1"></i> Send
+                </a>
+                <a id="draftApprovalRouteAdd" title="Send for Approval"
+                    href="{% url 'memo_approval_history' memo_id=memo.pk %}"
+                    class="btn visually-hidden mt-3 disabledAnchor">
+                    <i class="bi bi-send-arrow-up mx-1"></i> Send for Approval
+                </a>
+                <button type="button" id="sendDraftToPublic" class="btn visually-hidden mt-3"
+                   data-bs-toggle="modal" data-bs-target="#confirmationModal"
+                   data-bs-action="memo_route_public_draft" data-record-id="{{  memo.id }}"
+                   data-modal-body-class="text-success"
+                   data-bs-title="Public Memo" data-bs-body="Are you sure to send this Memo to All?" disabled>
+                   <i class="bi bi-people-fill"></i> Send for All
+                </button>
+            </div>
+            <!-- Toast -- used for due date validation-->
+            <div class="toast-container position-fixed top-0 end-0 p-3">
+                <div id="liveToast" class="toast bg-danger text-white" role="alert" aria-live="assertive" aria-atomic="true">
+                  <div class="toast-header">
+                    <i class="bi bi-bug-fill"></i>
+                    <span class="mx-2"></span>
+                    <strong class="me-auto" id="id_tost_header"> Error</strong>
+                    <small>Just Now</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                  </div>
+                  <div class="toast-body" id="id_tost_body">
+                  </div>
+                </div>
+            </div>
+            
+        </form>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script>
+        const items = document.getElementById('id_content_type');
+        let selected_text = items.options[items.selectedIndex].text;
+        let lastReferenceNumber = "{{last_ref_number}}";
+        let lastPersonalReferenceNumber = "{{last_personal_memo_ref_number}}";
+        const memo = "{{memo.status}}";
+        const memo_in_english = {{ memo.in_english|lower }};
+        const memo_date = moment("{{ memo.memo_date }}", "MMMM D, YYYY, h:mm a").format("YYYY-MM-DD");
+        let due_date = '';
+        const dbDueDate = "{{ memo.due_date }}";
+        if (dbDueDate !== 'None')
+            due_date = moment("{{ memo.due_date }}", "MMMM D, YYYY, h:mm a").format("YYYY-MM-DD");
+
+        let isPersonal = "{{memo.content_type.model}}" !== "businessunit";
+        let isManager = "{{ user_role.role.is_manager }}" === "True";
+        let isDelegate = "{{ user_role.deligated }}" === "True";
+        const dueDateBox = document.getElementById('id_due_date');
+        const publicMemo = document.getElementById('id_public').querySelector('input');
+        const sendToPublic = document.getElementById('sendDraftToPublic');
+
+        document.addEventListener('DOMContentLoaded', function() {
+            let createMemoForm = document.getElementById('createMemoForm');
+            let contentEditor = document.querySelector('#memoContent');
+            let editor = CKEDITOR.instances[contentEditor.id];
+
+            handleFormChange();
+
+            createMemoForm.addEventListener('input', handleFormChange);
+            editor.on('change', handleFormChange);
+            // Set business unit to be the default owner type
+            hideExternalOwnerType();
+            document.getElementById('id_reference_number').readOnly=true;
+
+            // Disable the owner type field
+            const ownerType = document.getElementById('id_content_type')
+            const hiddenInput = document.getElementById('mySelectHidden')
+            hiddenInput.value = ownerType.value
+            //ownerType.disabled = true
+
+            //Toggle follow up field based on the selected owner type
+            const selectedElement = document.getElementById("id_content_type");
+            selectedElement.addEventListener("change", toggleElement); 
+            selectedElement.addEventListener("change", handlePersonalMemo);
+            let date = "";
+            let dueDate = "";
+            let ethDate = convertDateToEC(memo_date);
+            document.getElementById('id_memo_date').value = ethDate;
+            if (memo_in_english) {
+                date = memo_date;
+                if (due_date !== ''){
+                    dueDate = due_date;
+                }
+                document.getElementById('memo_dueDate_icon').classList.add("d-none");
+            } else {
+                date = ethDate;
+                if (due_date !== ''){
+                    dueDate = convertDateToEC(due_date);
+                }
+                document.getElementById('memo_dueDate_icon').classList.remove("d-none");
+            }
+
+            const items = document.getElementById('id_content_type')
+            items.onchange = () => {
+                selected_text = items.options[items.selectedIndex].text;
+
+                isPersonal = selected_text === "Personal";
+
+                if (isManager || isDelegate || isPersonal) {
+                    document.getElementById('id_memo_date').removeAttribute("readonly");
+                    if (!lang.checked)
+                        document.getElementById('memo_date_icon').classList.remove("d-none");
+                } else {
+                    document.getElementById('id_memo_date').setAttribute("readonly", "readonly");
+                    document.getElementById('memo_date_icon').classList.add("d-none");
+                }
+
+                checkPublicChkBox();
+
+                if(memo == 'draft'){
+                    document.getElementById('id_reference_number').value = `${generateReferenceNumber(date, selected_text, lastPersonalReferenceNumber, lastReferenceNumber)}-${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}`;
+                }else{
+                    document.getElementById('id_reference_number').value = generateReferenceNumber(date, selected_text, lastPersonalReferenceNumber, lastReferenceNumber);
+                }
+                
+            }
+             // Add event listener to the language checkbox and generate reference number based on the selected language
+            const lang = document.getElementById('id_in_english')
+
+            setMemoDateForEdit(date);
+            setDueDateForEdit(dueDate);
+
+            if (dueDateBox) {
+                dueDateBox.addEventListener('change', handleDueDateChange);
+            }
+
+            handleDueDateChange();
+
+            lang.addEventListener('change', ()=>{
+                 //select owner type
+                selected_text = items.options[items.selectedIndex].text;
+                isPersonal = selected_text === "Personal";
+                if (lang.checked) {
+                    if (document.getElementById('id_memo_date').value !== '')
+                        date = convertDateToGC(document.getElementById('id_memo_date').value);
+                    if (document.getElementById('id_due_date').value !== '')
+                        dueDate = convertDateToGC(document.getElementById('id_due_date').value);
+                    document.getElementById('memo_dueDate_icon').classList.add("d-none");
+                    if (isManager || isDelegate || isPersonal)
+                        document.getElementById('memo_date_icon').classList.add("d-none");
+                } else {
+                    if (document.getElementById('id_memo_date').value !== '')
+                        date = convertDateToEC(document.getElementById('id_memo_date').value);
+                    if (document.getElementById('id_due_date').value !== '')
+                        dueDate = convertDateToEC(document.getElementById('id_due_date').value);
+                    document.getElementById('memo_dueDate_icon').classList.remove("d-none");
+                    if (isManager || isDelegate || isPersonal)
+                        document.getElementById('memo_date_icon').classList.remove("d-none");
+                }
+
+                if(memo === 'draft'){
+                    document.getElementById('id_reference_number').value = `${generateReferenceNumber(date, selected_text, lastPersonalReferenceNumber, lastReferenceNumber)}-${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}`;
+                }else{
+                    document.getElementById('id_reference_number').value = generateReferenceNumber(date, selected_text, lastPersonalReferenceNumber, lastReferenceNumber);
+                }
+                
+                setMemoDateForEdit(date);
+                setDueDateForEdit(dueDate);
+            });
+
+            if (isManager || isDelegate || isPersonal) {
+                document.getElementById('id_memo_date').removeAttribute("readonly");
+                if (lang.checked) {
+                    document.getElementById('memo_date_icon').classList.add("d-none");
+                } else {
+                    document.getElementById('memo_date_icon').classList.remove("d-none");
+                }
+            } else {
+                document.getElementById('id_memo_date').setAttribute("readonly", "readonly");
+                document.getElementById('memo_date_icon').classList.add("d-none");
+            }
+
+            publicMemo.addEventListener('change', function(event) {
+                event.preventDefault();
+                checkPublicChkBox();
+            });
+
+        });
+
+        function checkPublicChkBox() {
+            if (publicMemo.checked) {
+                    if (isManager || isDelegate || isPersonal) {
+                        sendToPublic.classList.add('btn-primary');
+                        sendToPublic.classList.remove('visually-hidden');
+                        document.getElementById('sendDraftInternalMemo').classList.remove('btn-primary');
+                        document.getElementById('sendDraftInternalMemo').classList.add('visually-hidden');
+                        document.getElementById('draftApprovalRouteAdd').classList.remove('btn-primary');
+                        document.getElementById('draftApprovalRouteAdd').classList.add('visually-hidden');
+                    } else {
+                        sendToPublic.classList.remove('btn-primary');
+                        sendToPublic.classList.add('visually-hidden');
+                        document.getElementById('sendDraftInternalMemo').classList.remove('btn-primary');
+                        document.getElementById('sendDraftInternalMemo').classList.add('visually-hidden');
+                        document.getElementById('draftApprovalRouteAdd').classList.add('btn-primary');
+                        document.getElementById('draftApprovalRouteAdd').classList.remove('visually-hidden');
+                    }
+                } else {
+                    if (isManager || isDelegate || isPersonal) {
+                        sendToPublic.classList.remove('btn-primary');
+                        sendToPublic.classList.add('visually-hidden');
+                        document.getElementById('sendDraftInternalMemo').classList.add('btn-primary');
+                        document.getElementById('sendDraftInternalMemo').classList.remove('visually-hidden');
+                        document.getElementById('draftApprovalRouteAdd').classList.remove('btn-primary');
+                        document.getElementById('draftApprovalRouteAdd').classList.add('visually-hidden');
+                    } else {
+                        sendToPublic.classList.remove('btn-primary');
+                        sendToPublic.classList.add('visually-hidden');
+                        document.getElementById('sendDraftInternalMemo').classList.remove('btn-primary');
+                        document.getElementById('sendDraftInternalMemo').classList.add('visually-hidden');
+                        document.getElementById('draftApprovalRouteAdd').classList.add('btn-primary');
+                        document.getElementById('draftApprovalRouteAdd').classList.remove('visually-hidden');
+                    }
+                }
+        }
+
+
+        if (selected_text === 'Business Unit') {
+            if (isManager || isDelegate || isPersonal) {
+                document.getElementById('sendDraftInternalMemo').classList.add('btn-primary');
+                document.getElementById('sendDraftInternalMemo').classList.remove('visually-hidden');
+                document.getElementById('draftApprovalRouteAdd').classList.add('visually-hidden');
+                document.getElementById('draftApprovalRouteAdd').classList.remove('btn-primary');
+            } else {
+                document.getElementById('sendDraftInternalMemo').classList.remove('btn-primary');
+                document.getElementById('sendDraftInternalMemo').classList.add('visually-hidden');
+                document.getElementById('draftApprovalRouteAdd').classList.remove('visually-hidden');
+                document.getElementById('draftApprovalRouteAdd').classList.add('btn-primary');
+            }
+        } else {
+            document.getElementById('sendDraftInternalMemo').classList.add('btn-primary');
+            document.getElementById('sendDraftInternalMemo').classList.remove('visually-hidden');
+            document.getElementById('draftApprovalRouteAdd').classList.add('visually-hidden');
+            document.getElementById('draftApprovalRouteAdd').classList.remove('btn-primary');
+        }
+      
+    </script>
+{% endblock %}

@@ -1,0 +1,12 @@
+[
+  {
+    "_command":  "python manage.py loaddata organogram/role_seed.json",
+    "model": "organogram.role",
+    "fields": {
+      "id": 1,
+      "name": "Administrator",
+      "description": "This is the super administrator role",
+      "is_manager": true
+    }
+  }
+]

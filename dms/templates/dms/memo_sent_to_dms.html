@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Sent Memo Details{% endblock %}
+{% block contentIcon %}
+    bi-card-list
+{% endblock %}
+{% block contentTitle %}
+    List of Memo in DMS
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <div class="input-group mb-3">
+        <span class="input-group-text">
+            <i class="fas fa-search"></i>
+        </span>
+        <input type="text" id="search" class="form-control" placeholder="Search memos..." value="{{ search_query }}" aria-label="Search memos">
+        <button type="button" id="clear-search" class="btn btn-secondary">Clear</button>
+    </div>
+
+    <div id="memo-results">
+        {% if page_obj %}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">S.No</th>  <!-- Added Serial Number Column -->
+                        <th>Memo Reference</th>
+                        <th>Memo Subject</th>
+                        <th>Sent Date</th>
+                        <th>Sent By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detail in page_obj %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>  <!-- Displaying Serial Number -->
+                        <td><a href="{% url 'memo_detail' detail.memo.id %}">{{ detail.memo.reference_number }}</a></td>
+                        <td><a href="{% url 'memo_detail' detail.memo.id %}">{{ detail.memo.subject }}</a></td>
+                        <td>{{ detail.sent_date|date:"Y-m-d H:i" }}</td>
+                        <td>{{ detail.sent_by.first_name }} {{ detail.sent_by.last_name }}</td>
+                    </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No memos found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No memo details have been sent to DMS yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- Pagination Section -->
+    <div class="pagination justify-content-center">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+            {% endif %}
+
+            {% for page in page_obj.paginator.page_range %}
+                {% if page_obj.number == page %}
+                    <li class="page-item active"><span class="page-link">{{ page }}</span></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page }}">{{ page }}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+            {% endif %}
+        </ul>
+    </div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+    // Existing search functionality
+    $('#search').on('input', function() {
+        let query = $(this).val();
+        $.ajax({
+            url: "{% url 'list_in_dms' %}",
+            data: {
+                'search': query
+            },
+            success: function(data) {
+                $('#memo-results').html(data);
+            }
+        });
+    });
+
+    // Clear button functionality
+    $('#clear-search').on('click', function() {
+        $('#search').val(''); // Clear the search input
+        $.ajax({
+            url: "{% url 'list_in_dms' %}", // Make a request to the list_in_dms view
+            success: function(data) {
+                $('#memo-results').html(data); // Reset the memo list
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

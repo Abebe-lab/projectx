@@ -1,0 +1,583 @@
+{% extends 'base.html' %}
+{% block title %} Memo History {% endblock %}
+{% block contentIcon %}
+    bi-recycle
+{% endblock %}
+{% block contentTitle %} Memo Tracking {% endblock %}
+{% block backBtn %}
+    <a href="#" id="backFromHistory" class="icon-link icon-link-hover" >
+        <i class="bi bi-arrow-left mx-1"></i>
+    </a>
+{% endblock %}
+{% block content %}
+<html>
+<head>
+    <title>Memo History Detail</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: gray;
+        }
+        .dotted-border {
+            border-style: dashed !important;
+            border-color: #922B21 !important;
+        }
+        .reverse-bg {
+            background-color: #D98880;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        let backBtnUrl = localStorage.getItem('backBtnUrl');
+    </script>
+    <div class="card">
+        <div class="card-header">
+            <a href="{% url 'memo_detail' memo.id %}" target="_blank" class="border border-info border-opacity-25 rounded-5 rounded-start p-2">{{ memo.reference_number }}</a>
+        </div>
+        <div class="card-body">
+            <div class="d-flex w-60 justify-content-between">
+                 {% if memo.status == 'draft' or memo.status == 'approved' %}
+                    <h5 class="mb-1 text-primary-emphasis">
+                       {% if memo.in_english %} From {% else %} ከ {% endif %}: {{ memo.get_memo_owner }}
+                    </h5>
+                {% else %}
+                    <h5 class="mb-1 text-primary-emphasis">{% if memo.in_english %} To {% else %} ለ {% endif %}:
+                        {% for destination in memo.get_memo_destination %}
+                            <span class="px-2 border border-primary-subtle rounded">{{ destination }}</span>
+                        {% endfor %}
+                    </h5>
+                {% endif %}
+                <small class="text-info" id="memoHistoryMemoDate">
+                    {% if memo.in_english %}
+                        {{ memo.memo_date|date:"d/m/Y" }}
+                    {% else %}
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                let memoDate = "{{ memo.memo_date|date:"Y-m-d" }}";
+                                document.getElementById('memoHistoryMemoDate').textContent = convertDateToEC(memoDate);
+                            });
+                        </script>
+                    {% endif %}
+                </small>
+            </div>
+            {% if memo.get_memo_cc_destination %}
+                <small class="text-primary-emphasis text-opacity-50 ml-3">{% if memo.in_english %} Cc {% else %} ግልባጭ {% endif %}:
+                    {% for destination in memo.get_memo_cc_destination %}
+                        <span class="px-2 border border-success-subtle rounded">{{ destination }}</span>
+                    {% endfor %}
+                </small>
+            {% endif %}
+            <p class="text-success-emphasis mt-2">
+                <small class="text-success-emphasis text-opacity-50">
+                    {% if memo.in_english %} Subject {% else %} ጉዳዩ {% endif %}:
+                </small>
+                <span class="text-decoration-underline">
+                    {{ memo.subject }}
+                </span>
+            </p>
+            <p>
+                <small class="text-secondary text-opacity-75">
+                    {% if memo.content|length > 350 %}
+                      {{ memo.content|safe|slice:":350" }}...
+                    {% else %}
+                      {{ memo.content|safe }}
+                    {% endif %}
+                </small>
+            </p>
+            <p>
+                {% if memo.urgent %}
+                    {% if memo.in_english %}
+                        <small class="bg-danger p-2 text-bold rounded-start-pill">Urgent</small>
+                    {% else %}
+                        <small class="bg-danger p-2 text-bold rounded-start-pill">አስቸኳይ</small>
+                    {% endif %}
+                {% endif %}
+                {% if memo.due_date %}
+                    {% if memo.in_english %}
+                        <small class="bg-info p-2 text-bold rounded-end-pill">Due Date: {{ memo.due_date|date:"d/m/Y" }}</small>
+                    {% else %}
+                        <small class="bg-info p-2 text-bold rounded-end-pill" id="memoHistoryDueDate">
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    let dueDate = "{{ memo.due_date|date:"Y-m-d" }}";
+                                    document.getElementById('memoHistoryDueDate').textContent = "የሚያበቃበት ቀን: " + convertDateToEC(dueDate);
+                                });
+                            </script>
+                        </small>
+                    {% endif %}
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    {% if title == 'All Routes' %}
+
+        <h3>Approval Routing Information:</h3>
+        {% if approval_routes %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Remark</th>
+                        <th>Date Sent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for route in approval_routes %}
+                        <tr>
+                            <td>{{ route.from_user.first_name }} {{ route.from_user.last_name }}</td>
+                            <td>{{ route.to_user.first_name }} {{ route.to_user.last_name }}</td>
+                            <td>{{ route.comment }}</td>
+                            <td>{{ route.created_date }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>The memo has no approval routing information so far</p>
+        {% endif %}
+
+
+        <h3 class="mt-4">Memo Routing Information:</h3>
+        {% if memo_routes %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Date Sent</th>
+                        <th>Date Viewed</th>
+                        <th>Remark</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for route in memo_routes %}
+                        <tr>
+                            <td>{{ route.from_user.first_name }} {{ route.from_user.last_name }}</td>
+                            <td>{{ route.to_user.first_name }} {{ route.to_user.last_name }}</td>
+                            <td>{{ route.date_sent }}</td>
+                            <td>{{ route.date_viewed }}</td>
+                            <td>{{ route.remark }}</td>
+                            <td>{{ route.status }}</td>
+                            <td>
+                                <a onclick="memoRoute('{% url 'edit_memo_route' pk=route.pk %}', 'routing', 'Edit Memo Forwarding');"
+                                   class='btn btn-hover btn-warning btn-sm {% if route.status != 'notseen' or current_user.id != route.from_user.id %} disabled {% endif %}'
+                                   title="Edit Memo Route"> <i class="bi bi-pencil-square"></i></a>
+                                <a class="btn btn-hover btn-danger btn-sm {% if route.status != 'notseen' or current_user.id != route.from_user.id %} disabled {% endif %}" href="#"
+                                   data-bs-toggle="modal" data-bs-target="#confirmationModal"
+                                   data-bs-action="memo_route_delete" data-record-id="{{  route.id }}"
+                                   data-modal-body-class="text-danger"
+                                   data-bs-title="Memo Forwarding" data-bs-body="Are you sure to delete Memo sent to '{{ route.to_user.first_name }} {{ route.to_user.last_name }}'?">
+                                   <i class="bi bi-trash3-fill"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>The memo has no routing information so far.</p>
+        {% endif %}
+
+    {% else %}
+{#        {% include 'memotracker/route_modal.html' %}#}
+        <div class="d-flex justify-content-between mb-4" id="routingAdd">
+            <h5 class="text-secondary">{{ title }}</h5>
+            <div>
+                {% if title == 'Approval Routing Information' %}
+                    <button type="button" id="approvalRouteAdd" title="Send for Approval"
+                            onclick="memoRoute('{% url 'approval_route' memo_id=memo.pk %}', 'routing', 'Memo Forwarding', 'Approval');"
+                            class="btn btn-success mr-3" data-bs-toggle="modal" data-bs-target="#routeModal">
+                        <i class="bi bi-spellcheck fs-6 mx-2"></i>
+                        {% if memo_routes %}
+                            Send Revised Memo
+                        {% else %}
+                            Send
+                        {% endif %}
+                    </button>
+
+                    <a class="btn btn-primary {% if disable %} disabled {% endif %}"
+                       href="#" title="Approve Memo"
+                       data-bs-toggle="modal" data-bs-target="#confirmationModal"
+                       data-bs-action="memo_approve" data-record-id="{{ memo.id }}"
+                       data-modal-body-class="text-success"
+                       data-bs-title="Approve Memo" data-bs-body="Are you sure to approve the memo '{{ memo.reference_number }}'?">
+                        <i class="bi bi-check-circle fs-6 mx-2"></i>Approve
+                    </a>
+                {% else %}
+                    {% if list_name == 'Outgoing Memo' %}
+                        {% if userrole.role.is_manager or userrole.deligated or memo.content_type.model == 'user' %}
+                        <div class="d-flex flex-grow-1 justify-content-end">
+
+                            <button type="button" id="routeAdd"
+                                    onclick="memoRoute('{% url 'memo_route' memo_id=memo.pk %}', 'routing', 'Memo Forwarding');"
+                                    class="btn btn-success" data-bs-toggle="modal" data-bs-target="#routeModal">
+                                {% if memo.status|lower == 'draft' or memo.status|lower == 'approved' %}
+                                    <i class="bi bi-send-check fs-6 mx-2"></i> Send
+                                {% else %}
+                                    <i class="bi bi-fast-forward fs-6 mx-2"></i> Forward
+                                {% endif %}
+                            </button>
+                        </div>
+
+                        {% endif %}
+                    {% else %}
+                    <div class="d-flex flex-grow-1 justify-content-end">
+
+                        <button type="button" id="routeAdd"
+                                onclick="memoRoute('{% url 'memo_route' memo_id=memo.pk %}', 'routing', 'Memo Forwarding');"
+                                class="btn btn-success" data-bs-toggle="modal" data-bs-target="#routeModal">
+                            {% if memo.status|lower == 'draft' or memo.status|lower == 'approved' %}
+                                <i class="bi bi-send-check fs-6 mx-2"></i> Send
+                            {% else %}
+                                <i class="bi bi-fast-forward fs-6 mx-2"></i> Forward
+                            {% endif %}
+                        </button>
+                    </div>
+
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        {% if memo_routes %}
+            <div class="row justify-content-center">
+                {% with previous_level=1 %}
+                    {% for route in memo_routes %}
+                        {% ifchanged route.level %}
+                            {% if route.level > previous_level %}
+                                <div class="w-100"></div>
+                            {% endif %}
+                            {% with previous_level=route.level %}
+                                <div class="card mr-3 border {% if route.status == 'seen' %} border-success {% elif route.status == 'reversed' %} dotted-border {% elif route.status == 'forwarded' %} border-primary {% else %} border-warning {% endif %}" style="width: 15rem;">
+                        {% if title != 'Approval Routing Information' %}
+                        <div class="card-header row px-0">
+                            <div class="col">
+                                    <div class="mx-auto my-auto {% if route.status == 'seen' %} bg-success {% elif route.status == 'reversed' %} reverse-bg {% elif route.status == 'forwarded' %} bg-primary {% else %} bg-warning {% endif %} rounded-circle text-center" style="width: 25px; height: 25px;">
+                                        <span>{{ route.level }}</span>
+                                    </div>
+                            </div>
+                            {% if current_user.id == route.from_user.id %}
+                                <div class="dropdown col-2 align-content-end">
+                                    <a class="icon-link" id="horizontalRouteDropdown" href="#" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                      <i class="bi bi-three-dots-vertical"></i>
+                                    </a>
+                                    <div class="dropdown-menu text-center" aria-labelledby="horizontalRouteDropdown">
+                                        {% if title == 'Approval Routing Information' %}
+                                            <a onclick="memoRoute('{% url 'edit_approval_route' pk=route.pk %}', 'routing', 'Edit Memo Approval');"
+                                               class='btn btn-light text-info btn-sm mr-3' title="Edit Memo Route"> <i class="bi bi-pencil-square"></i></a>
+                                            <a class="btn btn-light text-danger btn-sm ml-3" href="#"
+                                               data-bs-toggle="modal" data-bs-target="#confirmationModal"
+                                               data-bs-action="memo_approval_delete" data-record-id="{{  route.id }}"
+                                               data-modal-body-class="text-danger"
+                                               data-bs-title="Memo Approval" data-bs-body="Are you sure to delete Memo sent to '{{ route.to_user.first_name }} {{ route.to_user.last_name }}'?">
+                                               <i class="bi bi-trash3-fill"></i>
+                                            </a>
+                                        {% else %}
+                                            <a onclick="memoRoute('{% url 'edit_memo_route' pk=route.pk %}', 'routing', 'Edit Memo Forwarding');"
+                                               class='btn btn-light text-warning btn-sm mr-3 {% if route.status != 'notseen' %} disabled {% endif %}'
+                                               title="Edit Memo Route"> <i class="bi bi-pencil-square"></i></a>
+                                            {% if route.status == 'seen' or route.status == 'forwarded' %}
+
+                                                <a class="btn btn btn-light text-danger btn-sm  ml-3 {% if route.status != 'seen'  %} disabled {% endif %}" href="#"
+                                                   data-bs-toggle="modal" data-bs-target="#confirmationModal"
+                                                   data-bs-action="memo_route_reverse" data-record-id="{{  route.id }}"
+                                                   data-modal-body-class="text-danger"
+                                                   data-bs-title="Reverse Memo" data-bs-body="Are you sure to reverse Memo sent to '{{ route.get_destination }}'?"
+                                                   title="Reverse Memo">
+                                                    <i class="bi bi-arrow-up-left"></i>
+                                                </a>
+
+                                            {% else %}
+                                                <a class="btn btn-light text-danger btn-sm ml-3 {% if route.status != 'notseen'  %} disabled {% endif %}" href="#"
+                                                   data-bs-toggle="modal" data-bs-target="#confirmationModal"
+                                                   data-bs-action="memo_route_delete" data-record-id="{{  route.id }}"
+                                                   data-modal-body-class="text-danger"
+                                                   data-bs-title="Memo Forwarding" data-bs-body="Are you sure to delete Memo sent to '{{ route.get_destination }}'?">
+                                                   <i class="bi bi-trash3-fill"></i>
+                                                </a>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% elif current_user.id in route.get_memo_destination_as_user %}
+                                <div class="col-2 align-content-end">
+
+                                    <a class="btn btn-light ml-n3 text-danger{% if route.status != 'seen'  %} disabled {% endif %}" href="#"
+                                       data-bs-toggle="modal" data-bs-target="#confirmationModal"
+                                       data-bs-action="memo_route_reverse" data-record-id="{{  route.id }}"
+                                       data-modal-body-class="text-danger"
+                                       data-bs-title="Reverse Memo" data-bs-body="Are you sure to reverse Memo sent to '{{ route.get_destination }}'?"
+                                       title="Reverse Memo">
+                                        <i class="bi bi-arrow-up-left"></i>
+                                    </a>
+
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        <div class="card-body px-0 pt-0">
+                            <div class="row align-items-center border border-success p-1">
+                                <small class="col-5 text-bold">{{ route.from_user.first_name }} {{ route.from_user.last_name }}</small>
+                                <small class="col text-center">
+                                     {% if title != 'Approval Routing Information' and route.carbon_copy %}
+                                         <i class="bi bi-badge-cc-fill text-primary"></i>
+                                    {% endif %}
+                                    <i class="bi bi-arrow-right-circle fs-5 text-success"></i>
+                                </small>
+                                <small class="col-5 text-bold">
+                                    {{ route.get_destination }}
+                                </small>
+                            </div>
+                            <div class="my-2 align-items-center">
+                                <span><small><strong class="text-info">Sent on:</strong>
+                                    {% if title == 'Approval Routing Information' %}
+                                        {{ route.created_date|date:"d/m/Y h:i A" }}
+                                    {% else %}
+                                        {{ route.date_sent|date:"d/m/Y h:i A" }}
+                                    {% endif %}</small>
+                                </span>
+                            </div>
+                            {% if title != 'Approval Routing Information' and route.status != 'notseen' %}
+                                <div class="my-2 align-items-center">
+                                    <span><small><strong class="text-info">Viewed on:</strong> {{ route.date_viewed|date:"d/m/Y h:i A" }}</small></span>
+                                </div>
+                            {% endif %}
+                            {% if route.comment or route.remark %}
+                                <div class="my-2 align-items-center">
+                                    <span><small><strong class="text-info">
+                                        {% if title == 'Approval Routing Information' %}
+                                            Comment:
+                                        {% else %}
+                                            Remark:
+                                        {% endif %}
+                                    </strong></small>
+                                        {% if title == 'Approval Routing Information' %}
+                                            {% if route.comment|length > 30 %}
+                                              {{ route.comment|safe|slice:":30" }} ...
+                                                <a style="cursor: pointer;" onclick="memoRoute('{% url 'edit_approval_route' pk=route.pk %}', 'routingPreview', 'Approval Route Preview');">
+                                                    <small class="border border-info rounded px-1 text-primary">more</small>
+                                                </a>
+                                            {% else %}
+                                              {{ route.comment|safe }}
+                                            {% endif %}
+                                        {% else %}
+                                            {% if route.remark|length > 30 %}
+                                              {{ route.remark|safe|slice:":30" }} ...
+                                                <a style="cursor: pointer;" onclick="memoRoute('{% url 'edit_memo_route' pk=route.pk %}', 'routingPreview', 'Route Preview');">
+                                                    <small class="border border-info rounded px-1 text-primary">more</small>
+                                                </a>
+                                            {% else %}
+                                              {{ route.remark|safe }}
+                                            {% endif %}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            {% endif %}
+                            {% if title != 'Approval Routing Information' and route.memo_action %}
+                                <div class="my-2 align-items-center">
+                                    <span><small>
+                                        <i class="bi bi-check-square-fill text-primary"></i>
+                                        <span class="font-italic text-bold">{{ route.memo_action }}</span>
+                                        </small>
+                                    </span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                            {% endwith %}
+                        {% else %}
+                            <div class="card mr-3 border {% if route.status == 'seen' %} border-success {% elif route.status == 'reversed' %} dotted-border {% elif route.status == 'forwarded' %} border-primary {% else %} border-warning {% endif %}" style="width: 15rem;">
+                        {% if title != 'Approval Routing Information' %}
+                        <div class="card-header row px-0">
+                            <div class="col">
+                                    <div class="mx-auto my-auto {% if route.status == 'seen' %} bg-success {% elif route.status == 'reversed' %} reverse-bg {% elif route.status == 'forwarded' %} bg-primary {% else %} bg-warning {% endif %} rounded-circle text-center" style="width: 25px; height: 25px;">
+                                        <span>{{ route.level }}</span>
+                                    </div>
+                            </div>
+                            {% if current_user.id == route.from_user.id %}
+                                <div class="dropdown col-2 align-content-end">
+                                    <a class="icon-link" id="horizontalRouteDropdown" href="#" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                      <i class="bi bi-three-dots-vertical"></i>
+                                    </a>
+                                    <div class="dropdown-menu text-center" aria-labelledby="horizontalRouteDropdown">
+                                        {% if title == 'Approval Routing Information' %}
+                                            <a onclick="memoRoute('{% url 'edit_approval_route' pk=route.pk %}', 'routing', 'Edit Memo Approval');"
+                                               class='btn btn-light text-info btn-sm mr-3' title="Edit Memo Route"> <i class="bi bi-pencil-square"></i></a>
+                                            <a class="btn btn-light text-danger btn-sm ml-3" href="#"
+                                               data-bs-toggle="modal" data-bs-target="#confirmationModal"
+                                               data-bs-action="memo_approval_delete" data-record-id="{{  route.id }}"
+                                               data-modal-body-class="text-danger"
+                                               data-bs-title="Memo Approval" data-bs-body="Are you sure to delete Memo sent to '{{ route.to_user.first_name }} {{ route.to_user.last_name }}'?">
+                                               <i class="bi bi-trash3-fill"></i>
+                                            </a>
+                                        {% else %}
+                                            <a onclick="memoRoute('{% url 'edit_memo_route' pk=route.pk %}', 'routing', 'Edit Memo Forwarding');"
+                                               class='btn btn-light text-warning btn-sm mr-3 {% if route.status != 'notseen' %} disabled {% endif %}'
+                                               title="Edit Memo Route"> <i class="bi bi-pencil-square"></i></a>
+                                            {% if route.status == 'seen' or route.status == 'forwarded' %}
+
+                                                <a class="btn btn btn-light text-danger btn-sm  ml-3 {% if route.status != 'seen'  %} disabled {% endif %}" href="#"
+                                                   data-bs-toggle="modal" data-bs-target="#confirmationModal"
+                                                   data-bs-action="memo_route_reverse" data-record-id="{{  route.id }}"
+                                                   data-modal-body-class="text-danger"
+                                                   data-bs-title="Reverse Memo" data-bs-body="Are you sure to reverse Memo sent to '{{ route.get_destination }}'?"
+                                                   title="Reverse Memo">
+                                                   <i class="bi bi-arrow-up-left"></i>
+                                                </a>
+
+                                            {% else %}
+                                                <a class="btn btn-light text-danger btn-sm ml-3 {% if route.status != 'notseen'  %} disabled {% endif %}" href="#"
+                                                   data-bs-toggle="modal" data-bs-target="#confirmationModal"
+                                                   data-bs-action="memo_route_delete" data-record-id="{{  route.id }}"
+                                                   data-modal-body-class="text-danger"
+                                                   data-bs-title="Memo Forwarding" data-bs-body="Are you sure to delete Memo sent to '{{ route.get_destination }}'?">
+                                                   <i class="bi bi-trash3-fill"></i>
+                                                </a>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% elif current_user.id in route.get_memo_destination_as_user %}
+                                <div class="col-2 align-content-end">
+
+                                    <a class="btn btn-light ml-n3 text-danger{% if route.status != 'seen'  %} disabled {% endif %}" href="#"
+                                       data-bs-toggle="modal" data-bs-target="#confirmationModal"
+                                       data-bs-action="memo_route_reverse" data-record-id="{{  route.id }}"
+                                       data-modal-body-class="text-danger"
+                                       data-bs-title="Reverse Memo" data-bs-body="Are you sure to reverse Memo sent to '{{ route.get_destination }}'?"
+                                       title="Reverse Memo">
+                                        <i class="bi bi-arrow-up-left"></i>
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        <div class="card-body px-0 pt-0">
+                            <div class="row align-items-center border border-success p-1">
+                                <small class="col-5 text-bold">{{ route.from_user.first_name }} {{ route.from_user.last_name }}</small>
+                                <small class="col text-center">
+                                     {% if title != 'Approval Routing Information' and route.carbon_copy %}
+                                         <i class="bi bi-badge-cc-fill text-primary"></i>
+                                    {% endif %}
+                                    <i class="bi bi-arrow-right-circle fs-5 text-success"></i>
+                                </small>
+                                <small class="col-5 text-bold">
+                                    {{ route.get_destination }}
+                                </small>
+                            </div>
+                            <div class="my-2 align-items-center">
+                                <span><small><strong class="text-info">Sent on:</strong>
+                                    {% if title == 'Approval Routing Information' %}
+                                        {{ route.created_date|date:"d/m/Y h:i A" }}
+                                    {% else %}
+                                        {{ route.date_sent|date:"d/m/Y h:i A" }}
+                                    {% endif %}</small>
+                                </span>
+                            </div>
+                            {% if title != 'Approval Routing Information' and route.status != 'notseen' %}
+                                <div class="my-2 align-items-center">
+                                    <span><small><strong class="text-info">Viewed on:</strong> {{ route.date_viewed|date:"d/m/Y h:i A" }}</small></span>
+                                </div>
+                            {% endif %}
+                            {% if route.comment or route.remark %}
+                                <div class="my-2 align-items-center">
+                                    <span><small><strong class="text-info">
+                                        {% if title == 'Approval Routing Information' %}
+                                            Comment:
+                                        {% else %}
+                                            Remark:
+                                        {% endif %}
+                                    </strong></small>
+                                        {% if title == 'Approval Routing Information' %}
+                                            {% if route.comment|length > 30 %}
+                                              {{ route.comment|safe|slice:":30" }} ...
+                                                <a style="cursor: pointer;" onclick="memoRoute('{% url 'edit_approval_route' pk=route.pk %}', 'routingPreview', 'Approval Route Preview');">
+                                                    <small class="border border-info rounded px-1 text-primary">more</small>
+                                                </a>
+                                            {% else %}
+                                              {{ route.comment|safe }}
+                                            {% endif %}
+                                        {% else %}
+                                            {% if route.remark|length > 30 %}
+                                              {{ route.remark|safe|slice:":30" }} ...
+                                                <a style="cursor: pointer;" onclick="memoRoute('{% url 'edit_memo_route' pk=route.pk %}', 'routingPreview', 'Route Preview');">
+                                                    <small class="border border-info rounded px-1 text-primary">more</small>
+                                                </a>
+                                            {% else %}
+                                              {{ route.remark|safe }}
+                                            {% endif %}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            {% endif %}
+                            {% if title != 'Approval Routing Information' and route.memo_action %}
+                                <div class="my-2 align-items-center">
+                                    <span><small>
+                                        <i class="bi bi-check-square-fill text-primary"></i>
+                                        <span class="font-italic text-bold">{{ route.memo_action }}</span>
+                                    </small></span>
+                                </div>
+
+                            {% endif %}
+
+                        </div>
+                    </div>
+                        {% endifchanged %}
+                    {% endfor %}
+                {% endwith %}
+            </div>
+        {% else %}
+            {% if title == 'Approval Routing Information' %}
+                <p>The memo has no approval routing information so far</p>
+            {% else %}
+                <p>The memo has no routing information so far.</p>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+
+    <script>
+        let baseUrl = window.location.protocol + '//' + window.location.host + '/memotracker/';
+        let backFromHistory = document.getElementById('backFromHistory');
+        backFromHistory.setAttribute('href', baseUrl + backBtnUrl);
+        let span = document.createElement('span');
+        let backBtnLabel = "";
+        switch(backBtnUrl) {
+            case 'draft_memo_list':
+                backBtnLabel = "Draft Memos";
+                break;
+            case 'outgoing_memo_list':
+                backBtnLabel = "Outgoing Memos";
+                break;
+            case 'personal_memo_list':
+                backBtnLabel = "Personal Memos";
+                break;
+            case 'incoming_memo_list':
+                backBtnLabel = "Incoming Memos";
+                break;
+            case 'external_memo_list':
+                backBtnLabel = "External Memos";
+                break;
+        }
+        span.innerHTML = backBtnLabel;
+        span.style.fontWeight = "bold";
+        backFromHistory.appendChild(span);
+
+    </script>
+
+</body>
+</html>
+{% endblock %}

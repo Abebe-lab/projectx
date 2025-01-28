@@ -1,0 +1,878 @@
+{% extends 'base.html' %}
+{% load static %}
+<script src="{% static 'ckeditor/ckeditor/ckeditor.js' %}"></script>
+<script src="{% static 'ckeditor/ckeditor/adapters/jquery.js' %}"></script>
+<link rel="stylesheet" href="{% static 'ckeditor/ckeditor/themes/default.css' %}">
+
+{% block title %} Create Memo {% endblock %}
+{% block contentIcon %}
+    bi-envelope-plus-fill
+{% endblock %}
+{% block contentTitle %}
+    Create Memo
+{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-center">
+        <form action = "{% url 'create_memo' %}" method="POST" enctype="multipart/form-data" id="createMemoForm">
+            {% csrf_token %}
+            {{ form.media }}
+
+            <div class="border rounded px-3 py-2 mb-3 d-flex align-content-center">
+                <div class="d-flex gap-2 align-items-center me-5" id="id_lang_section">
+                    <div class="form-check text-center">
+                        {{form.in_english}}
+                    </div>
+                    <label for="id_in_english" class="form-label mb-0">English</label>
+                </div>
+
+                <div class="d-flex gap-2 align-items-center me-5">
+                    <div class="form-check text-center">
+                        {{form.urgent}}
+                    </div>
+                    <label for="id_urgent" class="form-label mb-0">Urgent</label>
+                </div>
+
+                <div class="d-flex gap-2 align-items-center me-5">
+                    <div class="form-check" id="id_public">
+                        {{form.public}}
+                    </div>
+                    <label for="id_public" class="form-label mb-0">Public</label>
+                </div>
+                <div class="d-flex gap-2 align-items-center me-5" id="id_external_section">
+                    <div class="form-check text-center">
+                        {{form.to_external}}
+                    </div>
+                    <label for="id_to_external" class="form-label mb-0">External</label>
+                </div>
+
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <label for="id_content_type" class="form-label" >Owner Type:<span style="color: red;"> * </span></label>
+                    {{form.content_type}}
+                </div>
+                <div class="col">
+                    <label for="id_reference_number" class="form-label" >Reference Number: <span style="color: red;"> * </span></label>
+                    {{form.reference_number}}
+                </div>
+
+                <div class="col">
+                    <label for="id_memo_date" class="form-label" >Memo Date: <span style="color: red;"> * </span></label>
+                    <input type="text" name="memo_date" id="id_memo_date" class="form-control" required value="" readonly>
+                </div>
+                <div class="col">
+                    <label for="id_due_date" class="form-label" >Due Date:</label>
+                    {% if form.in_english == 'True' %}
+                        {{form.due_date}}
+                    {% else %}
+                        <input type="text" name="due_date" id="id_due_date" class="form-control mDate-input" value="">
+                        <small><i class="bi bi-calendar mDate-icon d-none" id="memo_dueDate_icon"></i></small>
+                    {% endif %}
+                </div>
+                <div class="col" id="followUp">
+                    <label for="id_assigned_to" class="form-label" >Follow up:</label>
+
+                    <select name="assigned_to" id="id_assigned_to" class="form-select">
+                        <option value="" selected>----Select----</option>
+                        {% for user in dept_users %}
+                            <option value="{{ user.id }}">{{ user.get_full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mt-2 d-flex align-items-center">
+                <span>
+
+                </span>
+
+                <div class="col-9 d-flex align-items-center gap-2">
+                    <button type="button" id="addTemplateBtn" class="btn btn-info btn-sm" title="Import memo template">
+                        <i class="bi bi-repeat p-1"></i></button>
+                    <label for="id_subject" class="form-label d-flex"> Subject: <span style="color: red;"> * </span> </label>
+                        {{form.subject}}
+                </div>
+
+            <div class="row mt-2">
+                <div class="d-flex justify-content-between">
+                    <strong> Content: <span style="color: red;"> * </span> </strong>
+
+                </div>
+
+                {{form.content}}
+            </div>
+        </div>
+
+            <input type="hidden" name="attachments" id="attachments-input">
+
+            <div class="d-flex gap-3 justify-content-end">
+                <a class='btn btn-secondary text-end mt-3' href="{% url 'list_all_memo' %}"><i class="bi bi-x"></i> Cancel</a>
+                <button type="submit" class="btn btn-success mt-3" id='id_save_draft' name="save_draft" disabled onclick="resetMemoDate('saveDraft');">
+                    <i class="bi bi-file-earmark-plus"></i> Save Draft</button>
+
+                <button type="submit" class="visually-hidden" name="send_memo" id="sendMemo">  <i class="bi bi-send-check mx-2"></i>Sendxxx</button>
+
+                <button type="button" id="sendInternalMemo"
+                        onclick="memoRoute('{% url 'memo_route' %}', 'routing', 'Memo Forwarding', 'Send Memo');"
+                        class="btn visually-hidden mt-3" data-bs-toggle="modal" data-bs-target="#routeModal" disabled>
+                    <i class="bi bi-send-check mx-1"></i> Send
+                </button>
+                <button type="button" id="approvalRouteAdd" title="Send for Approval"
+                    onclick="memoRoute('{% url 'approval_route' %}', 'routing', 'Memo Forwarding', 'Send Approval');"
+                    class="btn visually-hidden mt-3" data-bs-toggle="modal" data-bs-target="#routeModal" disabled>
+                    <i class="bi bi-send-arrow-up mx-1"></i> Send for Approval
+                </button>
+                <button type="button" id="sendToPublic" class="btn visually-hidden mt-3"
+                   data-bs-toggle="modal" data-bs-target="#confirmationModal"
+                   data-bs-action="memo_route_public" data-record-id="0"
+                   data-modal-body-class="text-success"
+                   data-bs-title="Public Memo" data-bs-body="Are you sure to send this Memo to All?" disabled>
+                   <i class="bi bi-people-fill"></i> Send to All
+                </button>
+
+            </div>
+
+            <div class="accordion accordion-flush d-inline-flex mt-3" id="accordionFlushExample">
+                <div class="accordion-item">
+                  <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                      Add attachments
+                    </button>
+                  </h2>
+                  <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+                    <div class="accordion-body d-flex flex-column gap-3">
+                        <div>
+                            <button type="button" id="openModalBtn" class="btn btn-primary text-end mt-2"><i class="bi bi-file-earmark-pdf-fill"></i>Attachment Docs</button>
+                            <div id="attachmentList" class="px-3"> </div>
+                        </div>
+                        <div>
+                            <button type="button" id="addAttachmentsBtn" class="btn btn-primary text-end d-flex align-items-center"><i class="bi bi-paperclip"></i>Link Memo</button>
+                            <div id="selectedMemoLinks" class="p-3"></div>
+                        </div>
+
+                    </div>
+                  </div>
+                </div>
+
+
+            </div>
+
+        </form>
+
+           <!-- Attach Document Modal -->
+        <div class="modal fade" id="myAttachmentModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="myModalLabel">Memo Attachments</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="templateDocument"></div>
+                        <div id="templatePermission"></div>
+                        <form id="myAttachmentForm">
+                            <div class="form-group">
+                                {{form.document}}
+                            </div>
+                            <div class="form-group">
+                                {{ form.permission }}
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="saveForm()">Add</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal" onclick="closeAttachmentModal()" id="modalCloseBtn">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+         <!-- Import template -->
+         <div class="modal fade" id="memoTemplateModal" tabindex="-1" aria-labelledby="memoTemplateModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="memoTemplateModalLabel">Create Memo From Template </h5>
+                  <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <div class="form-group">
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="memoSearchInput" placeholder="Search memos">
+                      <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button" id="clearSearchInput">Clear</button>
+                      </div>
+                    </div>
+                  </div>
+                  <ul class="memo-list">
+                    {% for memo in available_memos %}
+                      <li style="list-style: none;">
+                        <input type="radio" id="memo-{{ memo.memo.id }}" name="templateMemo" value="{{ memo.memo.id }}">
+                        <label for="memo-{{ memo.memo.id }}"><a href="{% url 'memo_detail' memo.memo.id %}" target="_blank">{{ memo.memo.reference_number }} - {{ memo.memo.subject }}</a></label>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <button type="button" class="btn btn-primary" id="addSelectedTemplate">Add</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        <!-- Link Memo attachment -->
+        <div class="modal fade" id="memoAttachmentModal" tabindex="-1" aria-labelledby="memoAttachmentModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="memoAttachmentModalLabel">Attach Memos</h5>
+                  <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <div class="form-group">
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="memoSearchInput" placeholder="Search memos">
+                      <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button" id="clearSearchInput">Clear</button>
+                      </div>
+                    </div>
+                  </div>
+                  <ul class="memo-list">
+                    {% for memo in available_memos %}
+                      <li style="list-style: none;">
+                        <input type="checkbox" id="memo-{{ memo.memo.id }}" name="attached_memos" value="{{ memo.memo.id }}">
+                        <label for="memo-{{ memo.memo.id }}"><a href="{% url 'memo_detail' memo.memo.id %}" target="_blank">{{ memo.memo.reference_number }} - {{ memo.memo.subject }}</a></label>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <button type="button" class="btn btn-primary" id="addSelectedMemos">Add</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        <!-- Toast -- used for due date validation-->
+        <div class="toast-container position-fixed top-0 end-0 p-3">
+            <div id="liveToast" class="toast bg-danger text-white" role="alert" aria-live="assertive" aria-atomic="true">
+              <div class="toast-header">
+                <i class="bi bi-bug-fill"></i>
+                <span class="mx-2"></span>
+                <strong class="me-auto" id="id_tost_header"> Error</strong>
+                <small>Just Now</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+              </div>
+              <div class="toast-body" id="id_tost_body">
+              </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script>
+        // generate reference number
+        let lastReferenceNumber = "{{last_ref_number}}";
+        //let lastPersonalReferenceNumber = "{{lastPersonalMemoReferenceNumber}}";
+        let lastPersonalReferenceNumber = "{{last_personal_memo_ref_number}}";
+        let user_id = "{{user_id}}";
+        let bunit_code = "{{bunit_code}}";
+
+        let referenceNumber = document.getElementById('id_reference_number');
+        const items = document.getElementById('id_content_type')
+        let selected_text = items.options[items.selectedIndex].text;
+        // this array holds list of selected documents from the modal
+        let selectedDocuments = [];
+
+        // Add event listener to the language checkbox and generate reference number based on the selected language
+        const lang = document.getElementById('id_in_english')
+        if (!lang.checked) {
+            document.getElementById('memo_dueDate_icon').classList.remove("d-none");
+        }
+            lang.addEventListener('change', ()=>{
+                 //select owner type
+                selected_text = items.options[items.selectedIndex].text;
+                console.log('selected text', selected_text)
+                let date;
+                let dueDate = "";
+                if (lang.checked) {
+                    date = moment(new Date(), "MMMM D, YYYY, h:mm a").format("YYYY-MM-DD");
+                    if (document.getElementById('id_memo_date').value !== '')
+                        date = convertDateToGC(document.getElementById('id_memo_date').value);
+                    if (document.getElementById('id_due_date').value !== '')
+                        dueDate = convertDateToGC(document.getElementById('id_due_date').value);
+                    document.getElementById('memo_dueDate_icon').classList.add("d-none");
+                } else {
+                    date = convertDateToEC(moment(new Date(), "MMMM D, YYYY, h:mm a").format("YYYY-MM-DD"));
+                    if (document.getElementById('id_memo_date').value !== '')
+                        date = convertDateToEC(document.getElementById('id_memo_date').value);
+                    if (document.getElementById('id_due_date').value !== '')
+                        dueDate = convertDateToEC(document.getElementById('id_due_date').value);
+                    document.getElementById('memo_dueDate_icon').classList.remove("d-none");
+                }
+                document.getElementById('id_reference_number').value = generateReferenceNumber(date, selected_text, lastPersonalReferenceNumber, lastReferenceNumber);
+                setMemoDate(date);
+                setDueDateForEdit(dueDate, true);
+            });
+
+        let isPersonal = false;
+        let isManager = "{{ memo_type.role.is_manager }}" === "True";
+        let isDelegate = "{{ memo_type.deligated }}" === "True";
+
+        const submitBtn = document.getElementById('sendInternalMemo');
+        const saveDraftBtn = document.getElementById('id_save_draft');
+        const approvalRouteAdd = document.getElementById('approvalRouteAdd');
+        const dueDate = document.getElementById('id_due_date');
+        const toastLiveExample = document.getElementById('liveToast');
+        const tost_body = document.getElementById('id_tost_body');
+        const tost_header = document.getElementById('id_tost_header');
+        const assignedTo = document.getElementById('id_assigned_to');
+        // Hide the external option from the owner type dropdown
+        const publicMemo = document.getElementById('id_public');
+        const sendToPublic = document.getElementById('sendToPublic');
+
+        items.onchange = () => {
+            selected_text = items.options[items.selectedIndex].text;
+            let ethDate = convertDateToEC(moment(new Date(), "MMMM D, YYYY, h:mm a").format("YYYY-MM-DD"));
+            document.getElementById('id_reference_number').value = generateReferenceNumber(ethDate, selected_text, lastPersonalReferenceNumber, lastReferenceNumber);
+            if (publicMemo.querySelector('input').checked) {
+                if(sendToPublic) {
+                    if (isManager || isDelegate) {
+                        sendToPublic.classList.add('btn-primary');
+                        sendToPublic.classList.remove('visually-hidden');
+                        document.getElementById('sendInternalMemo').classList.remove('btn-primary');
+                        document.getElementById('sendInternalMemo').classList.add('visually-hidden');
+                        document.getElementById('approvalRouteAdd').classList.add('visually-hidden');
+                        document.getElementById('approvalRouteAdd').classList.remove('btn-primary');
+                    } else {
+                        if (items.options[items.selectedIndex].text === 'Business Unit') {
+                            sendToPublic.classList.remove('btn-primary');
+                            sendToPublic.classList.add('visually-hidden');
+                            document.getElementById('sendInternalMemo').classList.remove('btn-primary');
+                            document.getElementById('sendInternalMemo').classList.add('visually-hidden');
+                            document.getElementById('approvalRouteAdd').classList.remove('visually-hidden');
+                            document.getElementById('approvalRouteAdd').classList.add('btn-primary');
+                        } else {
+                            sendToPublic.classList.add('btn-primary');
+                            sendToPublic.classList.remove('visually-hidden');
+                            document.getElementById('sendInternalMemo').classList.remove('btn-primary');
+                            document.getElementById('sendInternalMemo').classList.add('visually-hidden');
+                            document.getElementById('approvalRouteAdd').classList.add('visually-hidden');
+                            document.getElementById('approvalRouteAdd').classList.remove('btn-primary');
+                        }
+                    }
+                }
+            } else {
+                if(sendToPublic) {
+                    sendToPublic.classList.remove('btn-primary');
+                    sendToPublic.classList.add('visually-hidden');
+                    if (isManager || isDelegate) {
+                        document.getElementById('sendInternalMemo').classList.add('btn-primary');
+                        document.getElementById('sendInternalMemo').classList.remove('visually-hidden');
+                        document.getElementById('approvalRouteAdd').classList.add('visually-hidden');
+                        document.getElementById('approvalRouteAdd').classList.remove('btn-primary');
+                    } else {
+                        if (items.options[items.selectedIndex].text === 'Business Unit') {
+                            document.getElementById('sendInternalMemo').classList.remove('btn-primary');
+                            document.getElementById('sendInternalMemo').classList.add('visually-hidden');
+                            document.getElementById('approvalRouteAdd').classList.remove('visually-hidden');
+                            document.getElementById('approvalRouteAdd').classList.add('btn-primary');
+                        } else {
+                            document.getElementById('sendInternalMemo').classList.add('btn-primary');
+                            document.getElementById('sendInternalMemo').classList.remove('visually-hidden');
+                            document.getElementById('approvalRouteAdd').classList.add('visually-hidden');
+                            document.getElementById('approvalRouteAdd').classList.remove('btn-primary');
+                        }
+                    }
+                }
+            }
+        }
+
+        function updateSelectedDocumentList(valueToRemove){
+            // remove it from the attachment input
+            const attachmentsInput = document.getElementById('attachments-input');
+
+            // Convert the string to an array of values
+            const values = attachmentsInput.value.split(',').map(value => value.trim());
+
+            // Find the index of the value to remove
+            const index = values.indexOf(valueToRemove);
+
+            if (index !== -1) {
+                // Remove the value from the array
+                values.splice(index, 1);
+
+                // Convert the array back to a string
+                valueList = values.join(', ');
+                attachmentsInput.value = valueList;
+            } else {
+            console.log('Value not found in the list.');
+            }
+        }
+        function removeAfterAdded(index){
+            const elementToRemove = document.querySelector('[data-index="'+index+'"]');
+
+            const objectIndex = selectedDocuments.findIndex(obj => parseInt(obj.id) === index);
+            let removedItem = {};
+            if (objectIndex !== -1) {
+                removedItem = selectedDocuments.splice(objectIndex, 1);
+
+            } else {
+                console.log('Object not found in the array.');
+            }
+
+           // Add the removed item back to the combo box
+            const documentSelect = document.getElementById('id_document');
+            const newOption = document.createElement('option');
+            newOption.value = removedItem[0].id;
+            newOption.text = removedItem[0].text;
+            documentSelect.add(newOption);
+
+            //update the hidden input list
+            updateSelectedDocumentList(removedItem[0].id)
+
+            if (elementToRemove) {
+                elementToRemove.remove();
+            }
+        }
+
+        // Show selected documents on the modal
+        function showSelectedDocsOnModal(){
+            // Update the template with the modified selected items
+            const templateDocument = document.getElementById('templateDocument');
+            templateDocument.innerHTML = '';
+
+            const showSelectedDocDiv = document.createElement('div');
+            for (let j = 0; j < selectedDocuments.length; j++) {
+                const selectedItem = document.createElement('button');
+                const iconSpan = document.createElement('span');
+                iconSpan.classList.add('bi', 'bi-x', 'mx-2'); // Add the Bootstrap icon class to the span
+
+                let buttonText = selectedDocuments[j].text + ' - ' + selectedDocuments[j].permission;
+                selectedItem.innerHTML = '<span>' + buttonText + '</span>';
+
+                //selectedItem.textContent = ''; // Clear the existing text content of the button
+                selectedItem.appendChild(iconSpan); // Append the icon span to the button
+                selectedItem.classList.add('btn', 'btn-sm', 'btn-primary','m-1');
+
+                selectedItem.setAttribute('data-index', j);
+                selectedItem.addEventListener('click', function() {
+                const index = parseInt(this.getAttribute('data-index'));
+                    removeSelectedDocument(index);
+                });
+
+                showSelectedDocDiv.appendChild(selectedItem);
+                templateDocument.appendChild(showSelectedDocDiv);
+            }
+        }
+
+        function removeSelectedDocument(index) {
+            // Remove the selected item from the array
+            const removedItem = selectedDocuments.splice(index, 1)[0];
+
+            // Add the removed item back to the combo box
+            const documentSelect = document.getElementById('id_document');
+            const newOption = document.createElement('option');
+            newOption.value = removedItem.id;
+            newOption.text = removedItem.text;
+            documentSelect.add(newOption);
+
+            showSelectedDocsOnModal();
+        }
+        function saveForm() {
+
+            let selectedDocument={
+                id: '',
+                text: '',
+                permission: ''
+            }
+
+            const documentSelect = document.getElementById('id_document');
+
+            // Loop through the options and collect the selected ones
+            let selectedOptions = Array.from(documentSelect.options).filter(option => option.selected);
+
+            // Collect the selected option texts and remove them from the combobox
+            selectedOptions.forEach(option => {
+                selectedDocument.id = option.value;
+                selectedDocument.text = option.text;
+                selectedDocument.permission = document.getElementById('id_permission').options[document.getElementById('id_permission').selectedIndex].text;
+                selectedDocuments.push(selectedDocument);
+
+                documentSelect.remove(option.index);
+            });
+
+            const templateDocument = document.getElementById('templateDocument');
+            templateDocument.innerHTML = '';
+            const showSelectedDocDiv = document.createElement('div');
+            // Append the selected documents to the template
+            for (let j = 0; j < selectedDocuments.length; j++) {
+                const selectedItem = document.createElement('button');
+
+                const iconSpan = document.createElement('span');
+                iconSpan.classList.add('bi', 'bi-x', 'mx-2'); // Add the Bootstrap icon class to the span
+
+                let buttonText = selectedDocuments[j].text + ' - ' + selectedDocuments[j].permission;
+                selectedItem.innerHTML = '<span>' + buttonText + '</span>';
+
+                //selectedItem.textContent = ''; // Clear the existing text content of the button
+                selectedItem.appendChild(iconSpan); // Append the icon span to the button
+
+                selectedItem.classList.add('btn', 'btn-sm', 'btn-primary','m-1');
+                // Add a data-index attribute to the selected item button
+                selectedItem.setAttribute('data-index', j);
+
+                // Add an event listener to handle removing the selected item
+                selectedItem.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    removeSelectedDocument(index);
+                });
+
+                showSelectedDocDiv.appendChild(selectedItem);
+                templateDocument.appendChild(showSelectedDocDiv);
+            }
+        }
+
+        function closeAttachmentModal() {
+
+            const attachments = document.getElementById('attachmentList');
+
+            const attachmentsInput = document.getElementById('attachments-input');
+            const templateDocument = document.getElementById('templateDocument');
+            templateDocument.innerHTML = '';
+            attachments.innerHTML = '';
+            attachmentsInput.value = '';
+            // Append the selected documents to the template
+            for (let j = 0; j < selectedDocuments.length; j++) {
+                attachmentsInput.value += selectedDocuments[j].id + ',';
+
+                const selectedItem = document.createElement('span');
+
+                const iconSpan = document.createElement('span');
+                iconSpan.classList.add('bi', 'bi-x', 'ml-3', 'bg-red'); // Add the Bootstrap icon class to the span
+
+                iconSpan.setAttribute('doc-id', selectedDocuments[j].id);
+
+                iconSpan.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('doc-id'));
+                    removeAfterAdded(index);
+                });
+
+                let lenkText = selectedDocuments[j].text + ' - ' + selectedDocuments[j].permission;
+                const docLink = document.createElement('a');
+                docLink.href = `/dms/document/${selectedDocuments[j].id}/details/`
+                docLink.target = '_blank';
+                docLink.style.textDecoration = 'none';
+                docLink.style.color = 'fff'
+                //a.textContent = lenkText
+                docLink.innerHTML = '<span>' + lenkText + '</span>';
+                selectedItem.appendChild(docLink);
+                selectedItem.appendChild(iconSpan); // Append the icon span to the button
+                selectedItem.classList.add('badge', 'text-bg-secondary','rounded-3','p-2','m-1');
+                selectedItem.setAttribute('data-index', selectedDocuments[j].id);
+
+                attachments.appendChild(selectedItem);
+            }
+
+            attachmentsInput.value = attachmentsInput.value.slice(0, -1); // Remove the last comma
+
+            // close modal, when clicked on either close button or x button
+            let myAttachmentModal = document.getElementById('myAttachmentModal');
+            myAttachmentModal.classList.remove('show');
+            myAttachmentModal.style.display = 'none';
+
+        }
+
+        if (publicMemo) {
+            publicMemo.addEventListener('change', function(event) {
+                event.preventDefault();
+                if (publicMemo.querySelector('input').checked) {
+                    if(sendToPublic) {
+                        if (isManager || isDelegate) {
+                            sendToPublic.classList.add('btn-primary');
+                            sendToPublic.classList.remove('visually-hidden');
+                            document.getElementById('sendInternalMemo').classList.remove('btn-primary');
+                            document.getElementById('sendInternalMemo').classList.add('visually-hidden');
+                            document.getElementById('approvalRouteAdd').classList.add('visually-hidden');
+                            document.getElementById('approvalRouteAdd').classList.remove('btn-primary');
+                        } else {
+                            if (items.options[items.selectedIndex].text === 'Business Unit') {
+                                sendToPublic.classList.remove('btn-primary');
+                                sendToPublic.classList.add('visually-hidden');
+                                document.getElementById('sendInternalMemo').classList.remove('btn-primary');
+                                document.getElementById('sendInternalMemo').classList.add('visually-hidden');
+                                document.getElementById('approvalRouteAdd').classList.remove('visually-hidden');
+                                document.getElementById('approvalRouteAdd').classList.add('btn-primary');
+                            } else {
+                                sendToPublic.classList.add('btn-primary');
+                                sendToPublic.classList.remove('visually-hidden');
+                                document.getElementById('sendInternalMemo').classList.remove('btn-primary');
+                                document.getElementById('sendInternalMemo').classList.add('visually-hidden');
+                                document.getElementById('approvalRouteAdd').classList.add('visually-hidden');
+                                document.getElementById('approvalRouteAdd').classList.remove('btn-primary');
+                            }
+                        }
+                    }
+                } else {
+                    if(sendToPublic) {
+                        sendToPublic.classList.remove('btn-primary');
+                        sendToPublic.classList.add('visually-hidden');
+                        if (isManager || isDelegate) {
+                            document.getElementById('sendInternalMemo').classList.add('btn-primary');
+                            document.getElementById('sendInternalMemo').classList.remove('visually-hidden');
+                            document.getElementById('approvalRouteAdd').classList.add('visually-hidden');
+                            document.getElementById('approvalRouteAdd').classList.remove('btn-primary');
+                        } else {
+                            if (items.options[items.selectedIndex].text === 'Business Unit') {
+                                document.getElementById('sendInternalMemo').classList.remove('btn-primary');
+                                document.getElementById('sendInternalMemo').classList.add('visually-hidden');
+                                document.getElementById('approvalRouteAdd').classList.remove('visually-hidden');
+                                document.getElementById('approvalRouteAdd').classList.add('btn-primary');
+                            } else {
+                                document.getElementById('sendInternalMemo').classList.add('btn-primary');
+                                document.getElementById('sendInternalMemo').classList.remove('visually-hidden');
+                                document.getElementById('approvalRouteAdd').classList.add('visually-hidden');
+                                document.getElementById('approvalRouteAdd').classList.remove('btn-primary');
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // After the DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide external Memo option
+            setMemoOwnerType();
+            setDueDateForEdit('', true);
+            let ethDate = convertDateToEC(moment(new Date(), "MMMM D, YYYY, h:mm a").format("YYYY-MM-DD"));
+            document.getElementById('id_memo_date').value = ethDate;
+
+            selected_text = items.options[items.selectedIndex].text;
+                console.log('selected text', selected_text)
+            document.getElementById('id_reference_number').value = generateReferenceNumber(ethDate, selected_text, lastPersonalReferenceNumber, lastReferenceNumber);
+
+            document.getElementById('id_reference_number').readOnly = true;
+
+            const openModalBtn = document.getElementById('openModalBtn');
+            const myAttachmentModal = document.getElementById('myAttachmentModal');
+
+            openModalBtn.addEventListener('click', function() {
+                myAttachmentModal.classList.add('show');
+                myAttachmentModal.style.display = 'block';
+                if (selectedDocuments.length > 0) {
+                    showSelectedDocsOnModal();
+                }
+
+            });
+
+            // Handle duedate
+            if (dueDate) {
+                dueDate.addEventListener('change', handleDueDateChange);
+            }
+
+            // Call the function initially to handle the initial due date value
+            handleDueDateChange();
+
+
+            const selectedElement = document.getElementById("id_content_type");
+            selectedElement.addEventListener("change", toggleElement);
+            selectedElement.addEventListener("change", handlePersonalMemo);
+
+            filterMemos('memoAttachmentModal');
+            filterMemos('memoTemplateModal');
+
+            // call the handleTemplateAdd function
+            handleTemplateAdd();
+
+            handleMemoLink('addAttachmentsBtn');
+            // Add logic for filtering memos based on the search input
+            //call the filterMemos function
+
+            let createMemoForm = document.getElementById('createMemoForm');
+
+        let contentEditor = document.querySelector('#memoContent');
+        let editor = CKEDITOR.instances[contentEditor.id];
+
+        handleFormChange();
+
+        createMemoForm.addEventListener('input', handleFormChange);
+        editor.on('change', handleFormChange);
+
+        if (isManager || isDelegate) {
+            document.getElementById('sendInternalMemo').classList.add('btn-primary');
+            document.getElementById('sendInternalMemo').classList.remove('visually-hidden');
+            document.getElementById('approvalRouteAdd').classList.add('visually-hidden');
+            document.getElementById('approvalRouteAdd').classList.remove('btn-primary');
+        } else {
+            document.getElementById('sendInternalMemo').classList.remove('btn-primary');
+            document.getElementById('sendInternalMemo').classList.add('visually-hidden');
+            document.getElementById('approvalRouteAdd').classList.remove('visually-hidden');
+            document.getElementById('approvalRouteAdd').classList.add('btn-primary');
+        }
+
+
+    });
+
+    const handleTemplateAdd = () => {
+    const addTemplateBtn = document.getElementById('addTemplateBtn');
+    const memoTemplateModal = new bootstrap.Modal(document.getElementById('memoTemplateModal'));
+    const addSelectedTemplate = document.getElementById('addSelectedTemplate')
+
+    addSelectedTemplate.addEventListener('click', function() {
+            const selectedMemo = document.querySelector('#memoTemplateModal input[name="templateMemo"]:checked');
+            const selectedMemoId = selectedMemo ? selectedMemo.value : null;
+
+            // Get the label
+            const selectedMemoLabel = selectedMemo ? selectedMemo.nextElementSibling.textContent.split(' - ')[1] : null;
+            document.getElementById('id_subject').value = selectedMemoLabel;
+
+            // Call the asyc function that returns promise to retrieve the content of the selected memo
+            retrieveMemoContent(selectedMemoId)
+            .then((content) => {
+                let contentEditor = document.querySelector('#memoContent');
+                let editor = CKEDITOR.instances[contentEditor.id];
+                    if (editor) { // Check if CKEditor instance exists
+                        editor.setData(content);
+                    }
+                })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        memoTemplateModal.hide();
+    });
+
+    addTemplateBtn.addEventListener('click', function() {
+            memoTemplateModal.show();
+        });
+    }
+
+    // Asynchronous function to retrieve the content of the selected memo from the server
+    // It returns a promise
+    async function retrieveMemoContent(memoId) {
+        let memoContent = '';
+        try{
+            const response = await fetch('/memotracker/api/memo/' + memoId);
+            const data = await response.json();
+            return data.content;
+        }catch(error){
+            console.error('Error:', error);
+        }
+
+    }
+
+
+      // add memo link function
+      const handleMemoLink = (attachmentBtn) => {
+            const addAttachmentsBtn = document.getElementById(attachmentBtn);
+            const memoAttachmentModal = new bootstrap.Modal(document.getElementById('memoAttachmentModal'));
+            const addSelectedMemos = document.getElementById('addSelectedMemos')
+            const contentField = document.getElementById('id_content'); // Assuming content field ID
+
+            addSelectedMemos.addEventListener('click', function() {
+                // Get all the checkboxes inside the modal
+                const checkboxes = document.querySelectorAll('#memoAttachmentModal input[name="attached_memos"]:checked');
+
+                // Store the selected memo IDs
+                const selectedMemoIds = [];
+                for (let i = 0; i < checkboxes.length; i++) {
+                    selectedMemoIds.push(checkboxes[i].value);
+                }
+
+                // Show the links of the selected memos
+                const linksContainer = document.getElementById('selectedMemoLinks');
+                linksContainer.innerHTML = '';
+
+                for (let i = 0; i < selectedMemoIds.length; i++) {
+                    let memoId = selectedMemoIds[i];
+                    const memoLink = document.createElement('a');
+                    const memoLinkInput = document.createElement('input');
+
+                    memoLink.href = '/memotracker/memo/' + memoId;
+                    memoLink.textContent = 'Memo ' + memoId;
+                    memoLink.target = '_blank';
+                    memoLinkInput.name= 'memo_ids';
+                    memoLinkInput.value = memoId;
+                    memoLinkInput.type = 'hidden';
+
+                    const deleteIcon = document.createElement('i');
+                    deleteIcon.classList.add('bi', 'bi-x', 'ml-3', 'cursor-pointer','bg-danger');
+                    deleteIcon.setAttribute('data-memo-id', memoId);
+                    deleteIcon.addEventListener('click', function(event) {
+                        // Retrieve the memoId from the data attribute of the delete icon
+                        const memoIdToDelete = event.target.getAttribute('data-memo-id');
+
+                        // Remove the corresponding memo from the selectedMemoIds array
+                        const index = selectedMemoIds.indexOf(memoIdToDelete);
+                        if (index > -1) {
+                            selectedMemoIds.splice(index, 1);
+                        }
+
+                        // Remove the memo's link and delete icon from the UI
+                        listItem.remove();
+                    });
+
+                const listItem = document.createElement('span');
+                listItem.classList.add('badge', 'bg-secondary', 'm-1', 'p-2','rounded-3', 'align-items-center');
+                listItem.appendChild(memoLink);
+                listItem.appendChild(deleteIcon);
+
+                listItem.appendChild(memoLinkInput);
+
+                linksContainer.appendChild(listItem);
+            }
+
+            // Hide the modal
+                memoAttachmentModal.hide();
+        });
+
+        addAttachmentsBtn.addEventListener('click', function() {
+                memoAttachmentModal.show();
+            });
+
+      }
+
+
+        // Add logic for filtering memos based on the search input
+        // It is used by both the memoAttachmentModal and memoTemplateModal
+        function filterMemos(modalId) {
+            const memoModal = document.getElementById(modalId);
+            const memoSearchInput = memoModal.querySelector('#memoSearchInput');
+            const memoListItems = memoModal.querySelectorAll('.memo-list li');
+            const clearSearchInput = memoModal.querySelector('#clearSearchInput');
+
+            memoSearchInput.addEventListener('input', function() {
+                const searchQuery = memoSearchInput.value.toLowerCase();
+
+                memoListItems.forEach(function(item) {
+                    const memoSubject = item.querySelector('label').textContent.toLowerCase();
+
+                    if (memoSubject.includes(searchQuery)) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+
+            clearSearchInput.addEventListener('click', function() {
+                memoSearchInput.value = '';
+                savedSearchQuery = '';
+
+                memoListItems.forEach(function(item) {
+                    item.style.display = 'block';
+                });
+            });
+        }
+</script>
+
+{% endblock %}

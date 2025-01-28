@@ -1,0 +1,335 @@
+.header-bg{
+    background-color: #459d46;
+    /*padding: 0;*/
+}
+
+/* Styling for the header */
+    .header {
+      background: transparent;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      background: transparent;
+      position: relative;
+     }
+
+.side{
+    background-color: gray;
+    height: 100vh;
+    width: 260px;
+}
+
+.minimized-sidebar {
+    background-color: gray;
+    height: 100vh;
+}
+form.nosubmit {
+  border: 1px solid #555;
+  padding: 0;
+  Background: white;
+  border-radius: 8px;
+}
+
+input.nosubmit {
+  width: 260px;
+  border: 1px solid #555;
+  padding: 9px 4px 9px 40px;
+  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' class='bi bi-search' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'%3E%3C/path%3E%3C/svg%3E") no-repeat 13px center;
+  border-radius: inherit;
+}
+
+.dropdown {
+    margin-left: 20px;
+}
+
+#dropdownMenuLink {
+    background: transparent;
+    border: none;
+    object-fit: cover;
+}
+
+ @media (max-width: 320px) {
+      .navbar-brand {
+        font-size: 14px;
+      }
+      .navbar-toggler {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+      }
+      .form-inline .form-control {
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+      .avatar img {
+        width: 30px;
+        height: 30px;
+      }
+    }
+
+
+/* styles.css */
+/* Custom styles for background color, text color, removing underlines, separating lines, and hover effect */
+.sidebar.side {
+  background-color: gray;
+  color: white;
+}
+
+.list-group-item {
+  background-color: gray;
+  color: white;
+  border: none; /* Remove borders between list items */
+  transition: color 0.3s, font-size 0.3s; /* Adding transition effect */
+}
+
+.list-group-item a {
+  text-decoration: none; /* Remove underlines from anchor tags */
+  color: white; /* Set text color of sub-pages to black */
+}
+
+.list-group-item:last-child {
+  border-bottom: none; /* Remove the bottom border of the last list item */
+}
+
+/* Hover effect for section */
+.list-group-item:hover {
+  color: #00FF00; /* Change text color on hover */
+  font-size: 1.05em; /* Increase font size on hover */
+}
+
+/* Hover effect for section */
+.list-group-item a:hover {
+  color: #00FFFF; /* Change text color on hover */
+  font-size: 1.05em; /* Increase font size on hover */
+}
+
+.footer-bg {
+    background-size: cover;
+    background: url(/static/img/count-bg.jpg) no-repeat;
+}
+
+#footer {
+  background-image: url('/static/img/count-bg.jpg');
+  background-size: cover;
+}
+
+.push-menu-hidden {
+  display: none;
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.content-wrapper {
+  flex-grow: 1;
+}
+
+
+.copyright-text {
+    border-top: 1px solid #313131;
+    color: #fff;
+}
+
+.copyright-text a {
+    color: #1696e7;
+    outline: medium none;
+    transition: all 0.3s ease-out 0s;
+    text-decoration: none;
+    background-color: transparent;
+}
+
+.toggle-rectangle {
+    height: 68px;
+    width: 100px;
+    background-color: white;
+    padding-left: 25px;
+    padding-top: 20px;
+}
+
+.logo-rectangle {
+    height: 68px;
+    width: 250px;
+    background-color: white;
+    padding-left: 10px;
+}
+
+svg .rotate-sg {
+  animation: rotate_cw 5s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+svg .rotate-bg {
+  animation: rotate_ccw 10s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes rotate_cw {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes rotate_ccw {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+/* Add new styles for hiding the sidebar */
+.sidebar-hidden {
+  display: none;
+}
+
+.sidebar-toggle-btn {
+  display: block;
+}
+
+/* New CSS for full-screen body when the sidebar is hidden */
+.body-fullscreen {
+  /*overflow: hidden;*/
+}
+
+/* Example: Update button's z-index or position */
+.sidebar-toggle-btn {
+    /* ... (existing styles) */
+    z-index: 1000; /* Ensure it's above other elements if necessary */
+    position: relative; /* Adjust position as needed */
+}
+
+span.li-side {
+    margin-left: 10px;
+}
+
+/* New class to hide the sidebar */
+.sidebar-hidden .side {
+  display: none;
+}
+
+.minimized-sidebar {
+  width: 32.7px; /* Set your desired width in pixels */
+  /* Other styles */
+}
+
+.recipient-list ul {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0;
+}
+
+.recipient-list ul li {
+    width: 100%;
+    list-style: none;
+    margin-left: 5px;
+    padding: 5px 10px;
+    background: #029de0;
+    border-radius: 30px;
+    font-size: 12px;
+    color: #FFFFFF;
+    font-weight: normal;
+}
+
+.menu-icon {
+    font-size: 1.25rem;
+}
+
+.form-check-input:checked {
+  background-color: darkgreen;
+}
+
+.form-check-input:disabled {
+    opacity: 1;
+    filter: none;
+}
+
+input#id_public, input#id_urgent, input#id_to_external, input#id_in_english {
+    border: 1px solid green;
+}
+
+input#id_reference_number {
+    width: 100%;
+}
+
+@keyframes urgent-animation {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes due-date-animation {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.urgent-blink {
+  animation: urgent-animation 1s infinite;
+}
+
+.due-date-blink {
+  animation: due-date-animation 1s infinite;
+}
+
+.badge-position {
+  position: absolute;
+  right: 25px;
+  top: 20%;
+  transform: translateY(-50%);
+}
+#heade-img{
+  width: 100%;
+}
+
+ul.nav.nav-tabs li.nav-item a.nav-link.active {
+    background-color: gray;
+    color: #fff;
+    font-weight: bold;
+}
+div#id_external_section {
+  padding-left: 3px;
+}
+
+.pin-container {
+    position: relative;
+}
+
+.pin-toggle {
+    position: absolute;
+    right: 20px;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+.pin-toggle-modal {
+    top: 56%;
+}
+
+.pin-toggle-pwdX {
+    top: 70%;
+}
+
+.mDate-input {
+    padding-right: 30px;
+}
+.mDate-icon {
+    position:absolute;
+    top: 70%;
+    right: 20px;
+    transform: translateY(-50%);
+}
+
+.disabledAnchor {
+    pointer-events: none;
+    cursor: pointer;
+    opacity: .7;
+}
+
+.modal-content {
+    left: 100;
+}
+
+#id_description {
+    width: 450px;
+    height: auto;
+}

@@ -1,0 +1,343 @@
+<!-- document_details template -->
+
+{% extends 'base.html' %}
+
+{% block title %} document details {% endblock %}
+{% block contentIcon %}
+    bi bi-file-earmark
+{% endblock %}
+{% block contentTitle %}
+    Document Details
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="ms-auto">
+        <a href="{% url 'index' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+    <p><strong>Title: </strong>{{ document.title }}</p>
+    <p><strong>Document Number: </strong>{{ document.document_number }}</p>
+    <p><strong>Uploaded by:</strong> {{ document.uploaded_by.first_name }} {{ document.uploaded_by.last_name }}</p>
+    <p><strong>Privacy:</strong> {{ document.get_privacy_display }}</p>
+    <p><strong>Doc. Owner: </strong>{% if document.owner %}{{ document.get_owner_name }}{% else %} External {% endif %}</p>
+    <p><strong>Category: </strong>{{ document.category }}</p>
+    <p><strong>Created Date:</strong> {{ document.created_date }}</p>
+    <p><Strong>Uploaded Date:</Strong> {{ document.uploaded_date }}</p>
+
+    <div class="d-flex gap-3">
+        <!-- cancel button -->
+    <a href="{% url 'index' %}" class="btn btn-dark download-link"><i class="bi bi-x-circle me-2"></i>Cancel</a>
+
+    {% if document.shared_with and request.user in document.shared_with.all %}
+        <a class="btn btn-warning download-link disabled" title="Edit Document" aria-disabled="true"><i class="bi bi-pencil-square me-2"></i>Edit</a>
+        <a class="btn btn-hover btn-danger disabled" title="Delete Document" aria-disabled="true"><i class="bi bi-trash3-fill me-2"></i>Delete</a>
+    {% else %}
+        <a href="{% url 'document_update' document.id %}" class="btn btn-warning download-link"><i class="bi bi-pencil-square me-2"></i>Edit</a>
+        <a class="btn btn-hover btn-danger" href="#"
+            data-bs-toggle="modal" data-bs-target="#confirmationModal"
+            data-bs-action="document_delete" data-record-id="{{ document.id }}"
+            data-modal-body-class="text-danger"
+            data-bs-title="Delete Document" data-bs-body="Are you sure to delete document '{{ document.subject }}'?">
+            <i class="bi bi-trash3-fill me-2"></i>Delete
+        </a>
+    {% endif %}
+
+<a href="{% url 'share_document' document.id %}" class="btn btn-primary download-link"><i class="bi bi-share me-2"></i>Share</a>
+<a href="{{ document.file.url }}" class="btn btn-secondary download-link" download target="_blank"><i class="bi bi-download me-2"></i>Download</a>
+<a href="#" class="open-modal btn btn-info" data-file="{{ document.file.url }}" data-toggle="modal" data-target="#document-modal"><i class="bi bi-binoculars me-2"></i>View</a>
+
+    <!-- Modal -->
+    <div class="modal fade" id="document-modal" tabindex="-1" role="dialog" aria-labelledby="document-modal-title" aria-hidden="true" style="overflow: auto;">
+        <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable" role="document">
+          <div class="modal-content">
+            <div class="modal-header" style="display: flex; justify-content: space-between;">
+              <!-- <h5 class="modal-title" id="document-modal-title">{{ document.title }}</h5> -->
+              
+              <div id="controls" style="display: flex; align-items: center; margin: 1px auto; gap: 5px; margin-bottom: 5px;">
+                <div id="navigation_controls" style="display: flex; gap: 5px; align-items: center;">
+                    <button id="prev_page" class="btn btn-sm btn-secondary" style="display: flex; gap: 5px; align-items: center;"> <i class="bi bi-caret-left-square-fill"></i> <span>Prev</span></button>
+                    <input type="number" name="current_page" id="current_page" class="form-control input-sm" width="fit-content">
+                    <button id="next_page" class="btn btn-sm btn-secondary" style="display: flex; gap: 5px; align-items: center;"><span>Next </span><i class="bi bi-caret-right-square-fill"></i> </button>
+                </div>
+                <div id="zoom_controls">
+                  <!-- <button id="zoom_in">Zoom In <i class="bi bi-zoom-in"></i></button>
+                    <button id="zoom_out">Zoom Out <i class="bi bi-zoom-out"></i></button> -->
+                    <button id="zoom_in" class="btn btn-sm btn-secondary" style="padding: 7px;"><i class="bi bi-zoom-in" ></i></button>
+                    <button id="zoom_out" class="btn btn-sm btn-secondary" style="padding: 7px;"><i class="bi bi-zoom-out"></i></button>
+                    <button id="printButton" class="btn btn-sm btn-primary" style="padding: 7px 12px;"><i class="bi bi-printer"></i></button>
+                    <a href="{{ document.file.url }}" data-bs-toggle="tooltip" class="btn btn-secondary download-link" download target="_blank"><i class="bi bi-download mx-2"></i></a>
+                </div>
+            </div>
+
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+
+            </div>
+            <div class="modal-body">           
+                <div id="canvas_container" style="max-width: 1250px ; overflow: auto; text-align: center; border: 3px solid; background: #333;">
+                    <div id="loading"> Loading...</div>
+                </div> 
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.3.200/pdf.min.js"></script>
+
+<script>
+
+    // Print pdf
+    function printPDF() {
+        // Create a new window for printing
+        const printWindow = window.open('', '_blank');
+        const pdfCanvas = document.getElementById('my-canvas');
+
+        // Get the total number of pages in the PDF
+        const totalPages = docState.totalPages; 
+
+        // Create a container element to hold all the pages
+        const container = document.createElement('div');
+
+        // Iterate through each page and add it to the container
+        for (let i = 1; i <= totalPages; i++) {
+            // Set the canvas to display the current page
+        docState.currentPage=i; // Replace with the appropriate function to set the canvas to display the given page
+        setCurrentPage(i);
+
+            // Create an image element for the current page's canvas content
+            const img = document.createElement('img');
+            img.src = pdfCanvas.toDataURL();
+
+            // Add the image to the container
+            container.appendChild(img);
+        }
+
+        // Write the container content to the print window
+        printWindow.document.open();
+        printWindow.document.write('<html><head><title>Print</title></head><body>' + container.innerHTML + '</body></html>');
+        printWindow.document.close();
+
+        // Call the print function of the print window
+        printWindow.print();
+    }
+
+    // PDF.js script
+    // Add doc states
+    const docState ={
+        pdf: null,
+        currentPage: 1,
+        zoom: 1,
+        totalPages:0
+    }
+   
+
+const initializePDFViewer = (doc)=>{
+    console.log('PDF.js init');
+    document.getElementById('current_page').value = docState.currentPage;
+    pdfjsLib.getDocument(doc).promise.then(pdfDoc =>{
+        console.log('PDF loaded', pdfDoc);
+        docState.pdf = pdfDoc;
+        docState.totalPages = pdfDoc._pdfInfo.numPages;
+        render();
+    })
+}
+
+
+const handleScroll = () => {
+    // Calculate the scroll position relative to the modal
+    const scrollPosition = modal.scrollTop + modal.clientHeight;
+    const totalHeight = modal.scrollHeight;
+
+    if (scrollPosition >= totalHeight) {
+        // User has scrolled to the bottom of the modal
+        docState.currentPage += 1;
+        document.getElementById('current_page').value = docState.currentPage;
+        render();
+    }
+
+    // Disconnect the observer
+    if (observer) {
+        observer.disconnect();
+    }
+
+    // Reconnect the observer
+    observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                // The canvas is visible
+                const visiblePageNumber = parseInt(entry.target.id.split('-')[1]);
+                console.log('Visible page:', visiblePageNumber);
+
+                // Update docState.currentPage and the current_page input box
+                docState.currentPage = visiblePageNumber;
+                document.getElementById('current_page').value = visiblePageNumber;
+            }
+        });
+    }, {
+        root: document.querySelector('.modal-dialog'), // The ancestor element to observe
+        threshold: 0.5 // The proportion of the target element which is visible
+    });
+
+    // Start observing the canvases
+    const canvases = document.querySelectorAll('canvas');
+    canvases.forEach(canvas => observer.observe(canvas));
+};
+
+// Render the PDF
+const render = () => {
+    console.log('Rendering page', docState.currentPage);
+    docState.pdf.getPage(docState.currentPage).then(page => {
+
+        // Create a new canvas for each page
+        const canvas = document.createElement('canvas');
+        canvas.id = `page-${docState.currentPage}`;
+        canvas.style.marginTop = '10px'; // Add inline styles to the canvas
+
+        const context = canvas.getContext('2d');
+        const scale = docState.zoom * window.devicePixelRatio; // Increase the resolution
+        const viewport = page.getViewport({scale: scale});
+
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        canvas.style.height = `${viewport.height / window.devicePixelRatio}px`; // Adjust the display size
+        canvas.style.width = `${viewport.width / window.devicePixelRatio}px`; // Adjust the display size
+
+
+        // Append the new canvas to the container
+        document.getElementById('canvas_container').appendChild(canvas);
+
+        page.render({
+            canvasContext: context,
+            viewport: viewport
+        }).promise.then(() => {
+            document.getElementById('loading').style.display = 'none';  
+           
+            // Increment the current page number if it's not the last page
+            if (docState.currentPage < docState.totalPages) {
+                docState.currentPage += 1;
+                render(); // Call the render function to render the next page
+            }else{
+                docState.currentPage = 1;
+            }
+
+            
+        });
+    });
+    
+}
+
+// Function to make a specific canvas visible
+const goToPage = (pageNumber) => {
+    console.log('Going to page', pageNumber);
+    const canvas = document.getElementById(`page-${pageNumber}`);
+    if (canvas) {
+        canvas.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('current_page').value = pageNumber;
+    }
+};
+
+// Event listeners for the next_page and prev_page buttons
+document.getElementById('next_page').addEventListener('click', () => {
+    if (docState.pdf == null || docState.currentPage >= docState.totalPages) return;
+    docState.currentPage += 1;
+    goToPage(docState.currentPage);
+});
+
+document.getElementById('prev_page').addEventListener('click', () => {
+    if (docState.pdf == null || docState.currentPage <= 1) return;
+    docState.currentPage -= 1;
+    goToPage(docState.currentPage);
+});
+
+// Event listener for the current_page input box
+document.getElementById('current_page').addEventListener('keypress', (e) => {
+    if (docState.pdf == null) return;
+
+    // Get key code
+    let code = (e.keyCode ? e.keyCode : e.which);   
+
+    if (code == 13) { // Enter keycode
+        let page = document.getElementById('current_page').valueAsNumber;
+        if (page >= 1 && page <= docState.totalPages) {
+            docState.currentPage = page;
+            goToPage(docState.currentPage);
+        } else {
+            alert(`Invalid page number. Enter a number between 1 and ${docState.totalPages}`);
+        }
+    }
+});
+
+
+// Print pdf
+const printPdf = ()=>{
+    // Create a new window
+    const printWindow = window.open('', '_blank');
+
+    // Get the canvas elements
+    const canvases = document.querySelectorAll('canvas');
+
+    // Create a promise for each canvas to track its loading state
+    const loadPromises = Array.from(canvases).map(canvas => {
+        return new Promise(resolve => {
+            const img = new Image();
+            img.onload = resolve;
+            img.src = canvas.toDataURL();
+            img.style.display = 'block';
+            printWindow.document.body.appendChild(img);
+        });
+    });
+
+    // Wait for all images to load
+    Promise.all(loadPromises).then(() => {
+        // Call print on the new window
+        printWindow.document.close();
+        printWindow.print();
+    });
+}
+   
+   //document.addEventListener('DOMContentLoaded', initPDFViewer);
+    document.addEventListener('DOMContentLoaded', ()=>{
+      
+        const file = document.querySelector('.open-modal').getAttribute('data-file');
+        console.log('File', file);
+        console.log('DOM loaded', document.querySelector('.open-modal'));
+        document.querySelector('.open-modal').addEventListener('click', ()=>{
+            // grab and show the modal
+        const modal = document.getElementById('document-modal');
+        modal.style.display = 'block';
+        modal.classList.add('show');
+
+        // Initialize the PDF viewer
+        initializePDFViewer(file);  
+        
+        //modal.addEventListener('scroll', handleScroll);
+                // Attach the handleScroll function as the scroll event listener
+        //document.getElementById('document-modal').addEventListener('scroll', handleScroll);
+        // Call handleScroll when the modal is shown
+
+        // Event listener for the scroll event
+        modal.onscroll = handleScroll;
+
+        // get print buttton
+        document.getElementById('printButton').addEventListener('click', printPdf);
+
+    });
+
+    document.querySelector('.close').addEventListener('click', ()=>{
+        const modal = document.getElementById('document-modal');
+        modal.style.display = 'none';
+        modal.classList.remove('show');
+    });
+
+    });
+
+</script>
+
+{% endblock %}
+
+

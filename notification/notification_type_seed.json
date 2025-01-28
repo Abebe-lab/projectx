@@ -1,0 +1,38 @@
+[
+  {
+    "_command":  "python manage.py loaddata notification/notification_type_seed.json",
+    "model": "notification.notificationtype",
+    "fields": {
+      "id": 1,
+      "name": "Incoming Memo"
+    }
+  },
+  {
+    "model": "notification.notificationtype",
+    "fields": {
+      "id": 2,
+      "name": "Approval Memo"
+    }
+  },
+  {
+    "model": "notification.notificationtype",
+    "fields": {
+      "id": 3,
+      "name": "Reminder"
+    }
+  },
+  {
+    "model": "notification.notificationtype",
+    "fields": {
+      "id": 4,
+      "name": "Public Memo"
+    }
+  },
+  {
+    "model": "notification.notificationtype",
+    "fields": {
+      "id": 5,
+      "name": "Reverse Memo"
+    }
+  }
+]

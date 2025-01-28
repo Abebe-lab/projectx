@@ -1,0 +1,162 @@
+{% if user.is_authenticated %}
+    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+        <li class="nav-item has-treeview {% if request.path|slice:'1:12' == 'memotracker' or request.path|slice:'1:12' == '' or request.path|slice:'1:5' == 'user' %}
+                {% if request.path|slice:'13:21' == 'approved' %}
+                {% else %}
+                    {% if request.path|slice:'13:17' == 'sent' %}
+                    {% else %}
+                        {% if request.path|slice:'13:19' == 'closed' %}
+                        {% else %}
+                            {% if request.path|slice:'13:21' == 'personal' %}
+                            {% else %}
+                                menu-open
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+            {% endif %}"
+        >
+            <a href="#" class="nav-link">
+                <i class="bi bi-envelope-paper-fill menu-icon"></i>
+{#                <i class="bi bi-envelope-paper-fill mr-1"></i>#}
+              <p>
+                Memo Tracker System
+                <i class="fas fa-angle-left right"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+                {% for user_role in user.userrole_set.all %}
+                    {% for role_perm in user_role.role.rolepermission_set.all %}
+                        {% if role_perm.permission.parent.code == "MTS" %}
+                             <li class="nav-item">
+                                <a href="/{{ role_perm.permission.url }}/" class="nav-link">
+                                    &nbsp;&nbsp;&nbsp;<i class="bi {{ role_perm.permission.icon }}"></i>&nbsp;
+                                    <p>{{ role_perm.permission.display_name }}</p>
+                                    {% if role_perm.permission.display_name == 'Incoming Memo' %}
+                                        <script>
+                                            loadIncomingUnreadCount();
+                                            function loadIncomingUnreadCount() {
+                                                let url = "/memotracker/count_unread_memos/Incoming Memo";
+                                                fetch(url, {
+                                                    method: 'GET'
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    let count = JSON.parse(data.count);
+                                                    let incomingUnread = document.getElementById('incomingUnread');
+                                                    if (incomingUnread && count !== 0) {
+                                                        incomingUnread.innerHTML = count;
+                                                        incomingUnread.style.display = 'inline-block';
+                                                    }
+                                                });
+                                            }
+                                        </script>
+                                        <span id="incomingUnread" class="badge text-bg-primary rounded-pill" style="font-size: 15px; display: none;">
+                                        </span>
+                                    {% elif role_perm.permission.display_name == 'External Letter' %}
+                                        <script>
+                                            loadExternalUnreadCount();
+                                            function loadExternalUnreadCount() {
+                                                let url = "/memotracker/count_unread_memos/External Letter";
+                                                fetch(url, {
+                                                    method: 'GET'
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    let count = JSON.parse(data.count);
+                                                    let externalUnread = document.getElementById('externalUnread');
+                                                    if (externalUnread && count !== 0) {
+                                                        externalUnread.innerHTML = count;
+                                                        externalUnread.style.display = 'inline-block';
+                                                    }
+                                                });
+                                            }
+                                        </script>
+                                        <span id="externalUnread" class="badge text-bg-primary rounded-pill" style="font-size: 15px; display: none;">
+                                        </span>
+                                    {% elif role_perm.permission.display_name == 'Draft Memo' %}
+                                        <script>
+                                            loadDraftUnreadCount();
+                                            function loadDraftUnreadCount() {
+                                                let url = "/memotracker/count_unread_memos/Draft Memo";
+                                                fetch(url, {
+                                                    method: 'GET'
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    let count = JSON.parse(data.count);
+                                                    let draftUnread = document.getElementById('draftUnread');
+                                                    if (draftUnread && count !== 0) {
+                                                        draftUnread.innerHTML = count;
+                                                        draftUnread.style.display = 'inline-block';
+                                                    }
+                                                });
+                                            }
+                                        </script>
+                                        <span id="draftUnread" class="badge text-bg-primary rounded-pill" style="font-size: 15px; display: none;">
+                                        </span>
+                                    {% endif %}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </li>
+
+        <li class="nav-item has-treeview {% if request.path|slice:'1:4' == 'dms' %}menu-open{% endif %}">
+            <a href="#" class="nav-link">
+                <i class="bi bi-file-earmark-pdf-fill menu-icon"></i>
+              <p>
+                DMS
+                <i class="fas fa-angle-left right"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+                    {% for user_role in user.userrole_set.all %}
+                        {% for role_perm in user_role.role.rolepermission_set.all %}
+                            {% if role_perm.permission.parent.code == "DMS" %}
+                                <li class="nav-item">
+                                    <a href="/{{ role_perm.permission.url }}/" class="nav-link">
+                                        &nbsp;&nbsp;&nbsp;<i class="bi {{ role_perm.permission.icon }}"></i>&nbsp;
+                                        <p>{{ role_perm.permission.display_name }}</p>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+        </li>
+        <li class="nav-item has-treeview {% if request.path|slice:'1:12' == 'memotracker' %}
+                {% if request.path|slice:'13:21' == 'personal' or request.path|slice:'13:21' == 'approved' or request.path|slice:'13:17' == 'sent' or request.path|slice:'13:19' == 'closed' %}
+                    menu-open
+                {% endif %}
+            {% elif request.path|slice:'1:11' == 'organogram' %}
+                {% if request.path|slice:'12:20' == 'customer' %}
+                    menu-open
+                {% endif %}
+            {% endif %}">
+            <a href="#" class="nav-link">
+                <i class="bi bi-clipboard2-data-fill menu-icon"></i>
+              <p>
+                Reports
+                <i class="fas fa-angle-left right"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+                    {% for user_role in user.userrole_set.all %}
+                        {% for role_perm in user_role.role.rolepermission_set.all %}
+                            {% if role_perm.permission.parent.code == "rpt" %}
+                                <li class="nav-item">
+                                    <a href="/{{ role_perm.permission.url }}/" class="nav-link">
+                                        &nbsp;&nbsp;&nbsp;<i class="bi {{ role_perm.permission.icon }}"></i>&nbsp;
+                                        <p>{{ role_perm.permission.display_name }}</p>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+            </ul>
+        </li>
+    </ul>
+{% endif %}

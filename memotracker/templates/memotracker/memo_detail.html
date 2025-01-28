@@ -1,0 +1,516 @@
+{% extends 'base.html'%}
+{% load custom_filters %}
+{% block title %} Memo Detail {% endblock %}
+{% block contentIcon %}
+    bi-card-list
+{% endblock %}
+{% block contentTitle %} Memo Details {% endblock %}
+{% block backBtn %}
+    <a href="#" id="backFromDetail" class="icon-link icon-link-hover">
+        <i class="bi bi-arrow-left mx-1"></i>
+    </a>
+{% endblock %}
+
+{% load static %}
+
+{% block content %}
+    <script>
+    let backBtnUrl = localStorage.getItem('backBtnUrl');
+    </script>
+    <div>
+        <p class="text-end">
+            <div class="d-flex justify-content-end mb-3">
+                {% if listName == 'Draft Memo' and memo.content_type.model == 'businessunit' %}
+                    {% if user_role.role.is_manager or user_role.deligated %}
+                        <a class="btn btn-success" href="{% url 'memo_approval_history' memo_id=memo.pk %}" title="Approval" style="height: 38px;">
+                            <i class="bi bi-spellcheck fs-6 mx-2"></i>
+                            {% if memo.created_by == user_role.user %}
+                                Send for Approval
+                            {% else %}
+                                Send for Revision
+                            {% endif %}
+                        </a>
+                        <a class="btn btn-primary ms-2" href="{% url 'memo_route_history' memo_id=memo.pk list_name=listName %}" title="Send Memo" style="height: 38px;">
+                            <i class="bi bi-send-check fs-6 mx-2"></i>Send
+                        </a>
+                    {% else %}
+                        <a class="btn btn-success" href="{% url 'memo_approval_history' memo_id=memo.pk %}" title="Approval" style="height: 38px;">
+                            <i class="bi bi-spellcheck fs-6 mx-2"></i>
+                            Send for Approval
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <a class="btn btn-primary" href="{% url 'memo_route_history' memo_id=memo.pk list_name=listName %}"
+                       title="{% if memo.status == 'draft' or memo.status == 'approved' %} Send Memo {% else %} Forward Memo {% endif %}" style="height: 38px;">
+                        {% if memo.status == 'draft' or memo.status == 'approved' %}
+                            <i class="bi bi-send-check fs-6 mx-2"></i>Send
+                        {% else %}
+                            <i class="bi bi-fast-forward fs-6 mx-2"></i>Forward
+                        {% endif %}
+                    </a>
+                {% endif %}
+
+                {% if listName != 'External Letter' and listName != 'Draft Memo' %}
+                    <a href="{% url 'generate_report' memo.id 'pdf' %}?listName={{ listName }}" target="_blank" class="btn btn-info ms-2" style="height: 38px;">View in PDF</a>
+                    <form id="memo-to-dms" method="POST" action="{% url 'send_memo_to_dms' memo.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success ms-2" style="height: 38px;">
+                            <i class="bi bi-cloud-upload mx-2"></i>Send to DMS
+                        </button>
+                    </form>
+<!--                        <a href="#" onclick="downloadAndUpload({{ memo.id }})" class="btn btn-success d-flex-end">-->
+<!--                    <i class="bi bi-cloud-upload mx-2"></i>Send To DMS-->
+<!--                </a>-->
+                {% endif %}
+            </div>
+
+            <script>
+                function downloadAndUpload(memoId) {
+                console.log("Download function triggered with memoId:", memoId);
+
+                // Display a loading indicator
+                $('#download-button').prop('disabled', true);
+                $('#download-button').html('<i class="fa fa-spinner fa-spin"></i> Downloading...');
+
+                fetch(`/memotracker/report/${memoId}/pdf?download=true`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.blob(); // Assuming PDF data is returned as a blob
+                    })
+                    .then(pdfBlob => {
+                        // Display the document_create modal
+                        $('#document_create_modal').modal('show');
+
+                        // Optionally trigger the upload document function
+                        uploadDocument('{% url 'document_create' %}', 'add_document', 'New document');
+
+                        // Remove loading indicator
+                        $('#download-button').prop('disabled', false);
+                        $('#download-button').html('<i class="bi bi-cloud-upload mx-2"></i> Send To DMS');
+                        alert('Memo downloaded successfully.');
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // Display error message and remove loading indicator
+                        $('#download-button').prop('disabled', false);
+                        $('#download-button').html('<i class="bi bi-cloud-upload mx-2"></i> Send To DMS');
+                        alert('Error downloading Memo. Please try again.');
+                    });
+            }
+            </script>
+        </p>
+
+        <div class="card">
+          <div class="card-body">
+            <div class="row d-flex justify-content-space-between">
+            <div class="col-6 border-end border-primary-subtle">
+
+                <p><strong>{% if memo.in_english %} From {% else %} ከ {% endif %}:</strong>
+                    {% if memo.content_type.model == 'businessunit' %}
+                        {{ business_unit_created_by }}
+                    {% elif memo.content_type.model == 'externalcustomer' %}
+                        {{ memo.get_memo_owner }}
+                    {% else %}
+                        {{ memo.get_memo_owner }} [{{ business_unit_created_by }}]</p>
+                    {% endif %}
+                {% if direct_list_count > 0 %}
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <strong>{% if memo.in_english %} To {% else %} ለ {% endif %}:</strong>
+                        {% if direct_list_count == 1 %}
+                            <span class="{% if direct_list.0.status == 'reversed' %}text-decoration-line-through{% endif %}">
+                                {{ direct_list.0.name }}
+                            </span>
+                        {% else %}
+                        <div class="accordion" id="accordionExample">
+                            <div class="accordion-item">
+                                <h1 class="accordion-header">
+                                  <button class="accordion-button collapsed btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                      <span class="{% if direct_list.0.status == 'reversed' %}text-decoration-line-through{% endif %}" style="text-decoration-color: red;">
+                                              {{ direct_list.0.name }}</span> &nbsp;&nbsp;&nbsp;&nbsp;
+                                      <i class="bi bi-three-dots"></i> &nbsp;&nbsp;&nbsp;&nbsp;
+                                  </button>
+                                </h1>
+                                <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                                  <div class="accordion-body">
+                                    {% if direct_list_count > 0 %}
+                                        {% for direct in direct_list %}
+                                            {% if forloop.counter != 1 %}
+                                                <span class="{% if direct.status == 'reversed' %}text-decoration-line-through{% endif %}">
+                                                    {{ direct.name }}
+                                                </span>
+                                                <br>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                  </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                </div>
+                {% endif %}
+                {% if cc_list_count > 0 %}
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <strong>{% if memo.in_english %} Cc {% else %} ግልባጭ {% endif %}:</strong>
+                        {% if cc_list_count == 1 %}
+                            <span class="{% if cc_list.0.status == 'reversed' %}text-decoration-line-through{% endif %}" style="text-decoration-color: red;">
+                                {{ cc_list.0.name }}
+                            </span>
+                        {% else %}
+                            <div class="accordion" id="cCList">
+                                <div class="accordion-item">
+                                    <h1 class="accordion-header">
+                                      <button class="accordion-button collapsed btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCc" aria-expanded="true" aria-controls="collapseCc">
+                                          <span class="{% if cc_list.0.status == 'reversed' %}text-decoration-line-through{% endif %}">
+                                              {{ cc_list.0.name }} </span> &nbsp;&nbsp;&nbsp;&nbsp;
+                                      <i class="bi bi-three-dots"></i> &nbsp;&nbsp;&nbsp;&nbsp;
+                                      </button>
+                                    </h1>
+                                    <div id="collapseCc" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                                      <div class="accordion-body">
+                                        {% if cc_list_count > 0 %}
+                                            {% for cc in cc_list %}
+                                                {% if forloop.counter != 1 %}
+                                                    <span class="{% if cc.status == 'reversed' %}text-decoration-line-through{% endif %}">
+                                                        {{ cc.name }}
+                                                    </span>
+                                                    <br>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+                                      </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                </div>
+                {% endif %}
+                {% if memo.assigned_to %}
+                <p><strong>{% if memo.in_english %}Follow up {% else %} ክትትል {% endif %}</strong>: {{ memo.get_memo_assigned_to }} [{{ business_unit_assigned_to }}]</p>
+                {% endif %}
+                {% if memo.in_english %}
+                    <p><strong>Created Date</strong>: {{ memo.created_date|date:'d/m/Y' }}</p>
+                {% else %}
+                   <p>
+                        <strong>የተፈጠረበት ቀን</strong>:
+                        <span id="createdDateDisplay">{{ ethDateCreated }}</span>
+                   </p>
+
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            let createdDate = "{{ memo.created_date|date:'Y-m-d' }}";
+                            let ethDateCreated = convertDateToEC(createdDate);
+
+                            // Update the span with the converted date
+                            document.getElementById('createdDateDisplay').textContent = ethDateCreated;
+                        });
+                    </script>
+
+                {% endif %}
+                {% if memo.to_external %}
+                    {% if memo.in_english %}
+                        <p><strong>Type</strong>: External Letter</p>
+                    {% else %}
+                        <p><strong>ዓይነት</strong>: የውጭ ደብዳቤ</p>
+                    {% endif %}
+                {% else %}
+                    {% if memo.in_english %}
+                        <p><strong>Type</strong>: Internal Memo</p>
+                    {% else %}
+                        <p><strong>ዓይነት</strong>: የውስጥ ማስታወሻ</p>
+                    {% endif %}
+                {% endif%}
+                <p>
+                {% if memo.urgent %}
+                    {% if memo.in_english %}
+                        <small class="{% if listName == 'Incoming Memo' or listName == 'External Memo' %}urgent-element{% endif %} bg-danger p-2 text-bold rounded-start-pill">Urgent</small>
+                    {% else %}
+                        <small class="{% if listName == 'Incoming Memo' or listName == 'External Memo' %}urgent-element{% endif %} bg-danger p-2 text-bold rounded-start-pill">አስቸኳይ</small>
+                    {% endif %}
+                {% endif %}
+                {% if memo.due_date %}
+                    {% if memo.in_english %}
+                        <small class="bg-info p-2 text-bold rounded-end-pill">
+                            Due Date: {{ memo.due_date|date:"d/m/Y" }}
+                        </small>
+                    {% else %}
+                        <small class="bg-info p-2 text-bold rounded-end-pill" id="memoDetailDueDate">
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    let dueDate = "{{ memo.due_date|date:"Y-m-d" }}";
+                                    document.getElementById('memoDetailDueDate').textContent = "የሚያበቃበት ቀን: " + convertDateToEC(dueDate);
+                                });
+
+                            </script>
+                        </small>
+
+                    {% endif %}
+                {% endif %}
+            </p>
+            </div>
+
+            <div class="col-6 pl-5">
+                <p> <strong>{% if memo.in_english %} Owner {% else %} ባለቤት {% endif %}</strong>:
+                    {% if memo.content_type.model == "user" %}
+                        {% if memo.in_english %} Personal {% else %} የግል {% endif %}
+                    {% elif memo.content_type.model == "businessunit" %}
+                        {% if memo.in_english %} Business Unit {% else %} የስራ ክፍል {% endif %}
+                    {% else %}
+                        {% if memo.in_english %} External {% else %} ከውጭ የመጣ{% endif %}
+                    {% endif %}
+                </p>
+                {% if memo.public %}
+                    <p><strong>Public</strong>: Yes</p>
+                {% else %}
+                    <p><strong>Public</strong>: No</p>
+                {% endif %}
+
+                <p><strong>Satus</strong>:
+                    {% if listName == 'Incoming Memo' or listName == 'External Memo' %}
+                        {{ memo|get_route_status:request }}
+                    {% else %}
+                        {{ memo.get_status_display }}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+          </div>
+        </div>
+        <script src="https://cdn.ckeditor.com/4.16.2/standard/ckeditor.js"></script>
+
+        <textarea id="editor">{{ memo.content|safe }}</textarea>
+
+        {% if memo.keywords %}
+            <p><strong>Keywords</strong>: {{ memo.keywords }}</p>
+        {% endif %}
+
+        <div class="row mt-5">
+             <div class="{% if linked_memos %} col {% else %} col-12 {% endif %}">
+                 <div class="row">
+                    <div class="mb-3 d-flex w-60 justify-content-around" >
+                        <h4 class="text-secondary">Attachments</h4>
+                        <a href="{% url 'memo_attachment_add' memo.id %}" class="btn btn-primary"><i class="bi bi-paperclip"></i> New Attach</a>
+                    </div><br/>
+                    {% if memo.attachments.all %}
+                         {% for attachment in memo.attachments.all %}
+                            <div class="card mr-3 h-100" style="width: 15rem;">
+                                <div class="card-header row mb-2">
+                                    <a class="col" href="{{ attachment.document.file.url }}" target="_blank"> <i class="bi bi-paperclip"></i> {{ attachment.document.title }}</a>
+                                    {% if user_role.user_id == attachment.attached_by.id %}
+                                        <div class="dropdown col-2">
+                                            <a class="icon-link" id="horizontalAttachmentDropdown" href="#" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                              <i class="bi bi-three-dots-vertical"></i>
+                                            </a>
+                                            <div class="dropdown-menu text-center" aria-labelledby="horizontalAttachmentDropdown">
+                                                    <a href="{% url 'memo_attachment_update' attachment.memo.id attachment.id %}" class="btn btn-light text-info card-link"><i class="bi bi-pencil-square"></i> </a>
+                                                    <a class="btn btn-light text-danger card-link" href="#"
+                                                        data-bs-toggle="modal" data-bs-target="#confirmationModal"
+                                                        data-bs-action="attachment_delete" data-record-id="{{  attachment.id }}"
+                                                        data-modal-body-class="text-danger"
+                                                        data-bs-title="Delete Attachment" data-bs-body="Are you sure to delete attachment '{{ attachment.document.title }}'?">
+                                                        <i class="bi bi-trash3-fill"></i>
+                                                    </a>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <img src="{{ attachment.document.get_thumbnail }}" class="card-img-top border mb-0" alt="Thumbnail" width="100px" height="150px">
+
+
+                                <div class="card-body px-0">
+                                  {% if attachment.remark %}
+                                        <p class="card-text mb-1 fs-6">
+                                            <small class="text-info text-bold">Remark: </small>
+                                            <small>
+                                                {% if attachment.remark|length > 25 %}
+                                                    {{ attachment.remark|safe|slice:":25" }}...
+                                                {% else %}
+                                                  {{ attachment.remark|safe }}
+                                                {% endif %}
+                                            </small>
+                                        </p>
+                                  {% endif %}
+                                  <p class="card-text mb-0 fs-6">
+                                      <small class="text-info text-bold">Attached by: </small>
+
+                                      {% for attachment in memo.attachments.all %}
+                                            {{ attachment.get_attached_by_display }}
+                                      {% endfor %}
+                                  </p>
+                                  <p class="card-text fs-6">
+                                      <small class="text-info text-bold">Permission: </small>
+                                      <small>{{ attachment.get_permission_display}}</small>
+                                  </p>
+                              </div>
+                            </div>
+                         {% endfor %}
+                    {% endif %}
+                 </div>
+             </div>
+
+            {% if linked_memos %}
+                <div class="{% if memo.attachments.all %} col {% else %} col-12 {% endif %}">
+                    <h4 class="mb-3 text-secondary text-center">Linked Memos</h4>
+                    {% for linked_memo in linked_memos %}
+                        <div class="card">
+                            <div class="card-header">
+                                <a href="{% url 'memo_detail' linked_memo.id %}" target="_blank">{{ linked_memo.reference_number }}</a>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex w-60 justify-content-between">
+                                    <h5 class="mb-1 text-primary-emphasis">
+                                        {{ linked_memo.get_memo_owner }}
+                                    </h5>
+                                    <small class="text-info">{{ linked_memo.memo_date|date:"d/m/Y" }}</small>
+                                </div>
+                                <p class="mb-1 text-success-emphasis">{{ linked_memo.subject }}</p>
+                                <small class="text-secondary text-opacity-75">
+                                    {% if linked_memo.content|length > 200 %}
+                                      {{ linked_memo.content|safe|slice:":200" }}...
+                                    {% else %}
+                                      {{ linked_memo.content|safe }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+    {% include 'modal.html' %}
+    <script>
+        let ethDate = "";
+        document.addEventListener('DOMContentLoaded', function() {
+            let memoDate = "{{ memo.memo_date|date:"Y-m-d" }}";
+            ethDate = convertDateToEC(memoDate);
+
+        let baseUrl = window.location.protocol + '//' + window.location.host + '/memotracker/';
+        let backFromDetail = document.getElementById('backFromDetail');
+        backFromDetail.setAttribute('href', baseUrl + backBtnUrl);
+        let span = document.createElement('span');
+        let backBtnLabel = "";
+        switch(backBtnUrl) {
+            case 'draft_memo_list':
+                backBtnLabel = "Draft Memos";
+                break;
+            case 'outgoing_memo_list':
+                backBtnLabel = "Outgoing Memos";
+                break;
+            case 'personal_memo_list':
+                backBtnLabel = "Personal Memos";
+                break;
+            case 'incoming_memo_list':
+                backBtnLabel = "Incoming Memos";
+                break;
+            case 'external_memo_list':
+                backBtnLabel = "External Memos";
+                break;
+        }
+        span.innerHTML = backBtnLabel;
+        span.style.fontWeight = "bold";
+        backFromDetail.appendChild(span);
+
+        CKEDITOR.replace('editor', {
+            readOnly: true
+        });
+
+        // Get the CKEditor instance
+        let editor = CKEDITOR.instances.editor;
+
+        // Get the current content
+        let memoContent = editor.getData();
+
+        // Append the signature template to the content
+
+        let letterHead = ''
+        let subject =  ''
+        if("{{memo.in_english}}" == 'True') {
+            letterHead =  '<p id="letter-head", style="text-align: right; margin: 3px;"><strong>Reference No</strong>: {{ memo.reference_number }}</p> <p style="text-align: right;"><strong>Memo Date</strong>: {{ memo.memo_date }} </p>'
+            subject =  '<p style="text-align: center; color: green; margin: 3px;"><strong>Subject</strong>: {{ memo.subject }}</p>'
+        }
+        else {
+            letterHead =  '<p id="letter-head", style="text-align: right; margin: 3px;"><strong>ቁጥር</strong>: {{ memo.reference_number }}</p> <p style="text-align: right;"><strong>ቀን</strong>: '+ ethDate +' </p>'
+            subject =  '<p style="text-align: center; color: green; margin: 3px;"><strong>ጉዳዩ</strong>: {{ memo.subject }}</p>'
+        }
+
+
+        let newContent = letterHead + '\n' + subject + '\n' + memoContent;
+
+        // Set the updated content in the editor
+        editor.setData(newContent);
+    });
+        let isManager = "{{ user_role.role.is_manager }}" === "True";
+        let isDelegate = "{{ user_role.deligated }}" === "True";
+        let detailRouteAdd = document.getElementById('detailRouteAdd');
+        let detailApprovalRouteAdd = document.getElementById('detailApprovalRouteAdd');
+
+        if (isManager || isDelegate) {
+
+            if (detailRouteAdd) {
+                detailRouteAdd.classList.add('btn-success');
+                detailRouteAdd.classList.remove('visually-hidden');
+            }
+            if (detailApprovalRouteAdd) {
+                detailApprovalRouteAdd.classList.add('visually-hidden');
+                detailApprovalRouteAdd.classList.remove('btn-success');
+            }
+        } else {
+            if (detailRouteAdd) {
+                detailRouteAdd.classList.remove('btn-success');
+                detailRouteAdd.classList.add('visually-hidden');
+            }
+            if (detailApprovalRouteAdd) {
+                detailApprovalRouteAdd.classList.remove('visually-hidden');
+                detailApprovalRouteAdd.classList.add('btn-success');
+            }
+        }
+
+        const urgentElement = document.querySelector('.urgent-element');
+        if (urgentElement) {
+            urgentElement.classList.add('urgent-blink');
+        }
+
+        // Checking memo sent to DMS
+        document.getElementById('memo-to-dms').onsubmit = function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            const formData = new FormData(this); // Get form data
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}', // Include CSRF token
+                },
+            })
+            .then(response => {
+                if (!response.ok) { // Check for response errors
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response:', data); // Log the response for debugging
+                if (data.success) {
+                    alert(data.message); // Display success message
+                    window.location.href = "{% url 'memo_detail' memo.id %}"; // Redirect to detail page
+                } else {
+                    alert(data.message); // Display error message
+                    if (data.redirect_url) {
+                        window.location.href = data.redirect_url; // Redirect to detail page if not seen
+                    } else {
+                        window.location.href = "{% url 'dms:send_memo_to_dms' memo.id %}"; // Redirect to send memo page
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error); // Log any errors to the console
+                alert('An error occurred while sending the memo. Please try again.'); // Display a generic error message
+            });
+        };
+    </script>
+{% endblock %}

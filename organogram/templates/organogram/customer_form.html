@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %} Add/Edit Customer {% endblock %}
+{% block content %}
+    <div class="card card-primary mx-auto" style="width: 30rem;">
+        <h3 class="card-header">{{ title }}</h3>
+        <div class="card-body">
+            <form method="POST" id="customer">
+                <div class="form-group col-lg-10 mx-auto">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                </div>
+                <div class="d-flex gap-3 pt-1 justify-content-end col-lg-10 mx-auto">
+                    {% if current_view == 'add_new_customer' %}
+                        <p class="text-end mb-3">
+                            <a href="{% url 'customer' %}" class="btn btn-secondary"><i class="bi bi-x mx-2"></i> Cancel</a>
+                            <button class="btn btn-success" type="submit"><i class="bi bi-file-earmark-plus"></i> Save</button>
+                        </p>
+                    {% elif current_view == 'add_external_customer' %}
+                        <p class="text-end mb-3">
+                            <a data-bs-dismiss="modal" data-bs-target="#customerModal" onclick="closeCustomerModal()" class="btn btn-secondary"><i class="bi bi-x mx-2"></i> Cancel</a>
+                            <button class="btn btn-success" data-bs-dismiss="modal" data-bs-target="#customerModal"><i class="bi bi-file-earmark-plus"></i> Save</button>
+                        </p>
+                    {% else %}
+                        <p class="text-end mb-3">
+                           <a href="{% url 'external_memo' %}" class="btn btn-secondary"><i class="bi bi-x mx-2"></i> Cancel</a>
+                            <button class="btn btn-success" type="submit"><i class="bi bi-file-earmark-plus"></i> Save</button>
+                        </p>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

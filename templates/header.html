@@ -1,0 +1,322 @@
+{% if user.is_authenticated %}
+<div>
+    <a href="#"><b style="font-size: 22px; color: white;">Nexus MDM</b></a>
+</div>
+
+<ul class="navbar-nav ml-auto">
+    <!-- Notifications Dropdown Menu -->
+    <li class="nav-item dropdown">
+        <a class="nav-link pt-2" id="bellAnchor" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-bell-fill fs-4 text-white"></i>&nbsp;
+            <span class="badge badge-primary navbar-badge fs-6 text-bold mt-n2" id="bellCount"></span>
+        </a>
+        <!-- Your notifications dropdown menu code goes here -->
+        <ul class="dropdown-menu dropdown-menu-end text-wrap" id="notify" style="width: 300px !important;">
+            <li><h6 class="dropdown-header">Notifications</h6></li>
+{#            <li><hr class="dropdown-divider" id="firstHeaderLine"></li>#}
+            <li>
+                <div>
+                    <ul class="list-group list-group-flush" id="notify2" style="max-height: 500px; overflow-y: auto;"></ul>
+                </div>
+            </li>
+            <li class="d-flex justify-content-end pr-3" id="clearAllButton">
+                <a class="link-secondary btn-sm" href="#">Clear All</a>
+            </li>
+        </ul>
+        <audio id="notificationSound">
+          <source src="/static/audio/bell_notification.wav" type="audio/mpeg">
+          Your browser does not support the audio element.
+        </audio>
+    </li>
+
+    <!-- User Profile Dropdown Menu -->
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            {% if user.profile.profile_picture %}
+                <img src="{{ user.profile.profile_picture.url }}" alt="Profile Picture" width="30" height="30" class="rounded-circle">
+            {% else %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
+                    <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
+                    <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
+                </svg>
+            {% endif %}
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+            <li><a class="dropdown-item" href="#">{{ user.username }}</a></li>
+            <li class="profile-dropdown">
+                <a class="dropdown-item profile-dropdown-toggle" href="#" role="button" onclick="toggleDropdown(event, 'profileSettingsDropdown'); return false;">
+                    Settings <i class="fas fa-chevron-down"></i>
+                </a>
+                <ul class="profile-dropdown-menu profile-dropdown-menu-end" id="profileSettingsDropdown" aria-labelledby="profileSettingsDropdown" style="display: none;" onclick="event.stopPropagation();">
+                    <a class="dropdown-item" href="{% url 'edit_profile' %}"  style="color: blue;">Profile Settings</a>
+                    <a class="dropdown-item" href="{% url 'forgot_pin' %}"  style="color: blue;">Reset PIN</a>
+                    <a class="dropdown-item" href="{% url 'dashboard_config' %}"  style="color: blue;">Dashboard Settings</a>
+                </ul>
+            </li>
+            <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+        </ul>
+    </li>
+</ul>
+<script>
+    // JavaScript function to toggle submenu visibility
+    function toggleDropdown(event, dropdownId) {
+        var dropdown = document.getElementById(dropdownId);
+        dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
+        event.stopPropagation(); // Stop event propagation to prevent hiding the dropdown when clicking inside it
+    }
+    // Close dropdown when clicking outside of it
+    document.addEventListener('click', function(event) {
+        var dropdowns = document.querySelectorAll('.dropdown-menu');
+        dropdowns.forEach(function(dropdown) {
+            if (dropdown.style.display === 'block') {
+                dropdown.style.display = 'none';
+            }
+        });
+    });
+    
+    // setup notification socket
+    const notifySocket = new WebSocket('ws://' + window.location.host + '/ws/notifications/');
+    
+    // on socket open
+    notifySocket.onopen = function (e) {
+        console.log('Socket successfully connected.');
+    };
+    
+    // on socket close
+    notifySocket.onclose = function (e) {
+        console.log('Socket closed unexpectedly');
+    };
+    
+    // on receiving message
+    notifySocket.onmessage = function (e) {
+        const data = JSON.parse(e.data);
+        const notification = data.notification;
+        setMessage(notification, true);
+        playNotificationSound();
+    };
+    
+    function playNotificationSound() {
+      let audioElement = document.getElementById("notificationSound");
+      audioElement.play();
+    }
+    
+    function setMessage(notification, sentNotification) {
+        let ulElement = document.getElementById('notify2');
+        let firstHeaderLine = document.getElementById('firstHeaderLine');
+        let clearAllButton = document.getElementById('clearAllButton');
+        
+        let count = document.getElementById('bellCount').innerHTML;
+        if (count === "") {
+            document.getElementById('bellCount').innerHTML = "1";
+        } else {
+            document.getElementById('bellCount').innerHTML = (parseInt(count) + 1).toString();
+        }
+        
+        let mainLi = document.createElement('li');
+        mainLi.className = 'list-group-item list-group-item-action';
+        let contentDiv = document.createElement('div');
+        contentDiv.className = 'd-flex justify-content-between';
+        let typeDiv = document.createElement('small');
+        typeDiv.className = 'text-info fw-semibold';
+        typeDiv.innerHTML = notification.notification_name;
+        let messageAnchor = document.createElement('small');
+        messageAnchor.className = 'text-body-secondary';
+        messageAnchor.innerHTML = notification.message;
+        let durationText = document.createElement('small');
+        durationText.className = 'text-body-secondary fw-lighter fst-italic';
+        let days = notification.time_difference.days;
+        let hours = notification.time_difference.hours;
+        let minutes = notification.time_difference.minutes;
+        let dur_text = "";
+        if (days > 0) {
+            if (hours > 0) {
+                dur_text = days + " days " + hours + " hrs " + minutes + " mins ago";
+            } else {
+                dur_text = days + " days " + minutes + " mins ago";
+            }
+        } else {
+            if (hours > 0) {
+                dur_text = hours + " hrs " + minutes + " mins ago";
+            } else {
+                dur_text = minutes + " mins ago";
+            }
+        }
+        durationText.innerHTML = dur_text;
+        let maxLength = 20;
+        
+        if (dur_text.length > maxLength) {
+            durationText.textContent = dur_text.substring(0, maxLength) + "...";
+        }
+        
+        contentDiv.appendChild(typeDiv);
+        contentDiv.appendChild(durationText);
+        
+        let newAnchor = document.createElement('a');
+        newAnchor.href = "#";
+        
+        newAnchor.appendChild(messageAnchor);
+        newAnchor.appendChild(contentDiv);
+        
+        newAnchor.addEventListener('click', function(event) {
+            event.preventDefault();
+            changeNotificationStatus(notification.id, notification.url);
+        });
+        
+        mainLi.appendChild(newAnchor);
+        
+        {#let hrLi = document.createElement('li');#}
+        {#let hr = document.createElement('hr');#}
+        {#hr.className = 'dropdown-divider text-white-50';#}
+        {#hrLi.appendChild(hr);#}
+        
+        
+        if (sentNotification) {
+            {#firstHeaderLine.insertAdjacentElement('afterend', mainLi);#}
+            {#mainLi.insertAdjacentElement('afterend', hrLi);#}
+            ulElement.insertBefore(mainLi, ulElement.firstChild);
+            let linkElement = document.getElementById('bellAnchor');
+            linkElement.setAttribute('data-bs-toggle', 'dropdown');
+        } else {
+            {#ulElement.insertBefore(mainLi, clearAllButton);#}
+            {#ulElement.insertBefore(hrLi, clearAllButton);#}
+            ulElement.appendChild(mainLi);
+            {#ulElement.appendChild(hrLi);#}
+        }
+        
+    }
+    
+    
+    document.addEventListener('DOMContentLoaded', function(event) {
+        loadNotifications();
+        
+        let clearAllButton = document.getElementById('clearAllButton');
+        
+        clearAllButton.addEventListener('click', function(event) {
+            clearAllNotifications();
+        });
+    });
+    
+    function loadNotifications() {
+        let url = "/notification/";
+        fetch(url, {
+            method: 'GET'})
+            .then(response => response.json())
+            .then(data => {
+                let notifications = JSON.parse(data.notifications);
+                notifications.forEach(notification => {
+                    setMessage(notification, false);
+                });
+                let bellCount = document.getElementById('bellCount');
+                let linkElement = document.getElementById('bellAnchor');
+                if (bellCount.textContent.trim() === "") {
+                  linkElement.setAttribute('data-bs-toggle', '');
+                } else {
+                    linkElement.setAttribute('data-bs-toggle', 'dropdown');
+                }
+            });
+    }
+    
+    function getCsrfToken() {
+      let csrfCookieName = 'csrftoken';
+      let cookies = document.cookie.split(';');
+    
+      for (let i = 0; i < cookies.length; i++) {
+        let cookie = cookies[i].trim();
+        if (cookie.indexOf(csrfCookieName) === 0) {
+          return cookie.substring(csrfCookieName.length + 1);
+        }
+      }
+    
+      return null;
+    }
+    
+    function clearAllNotifications() {
+        let csrfToken = getCsrfToken(); 
+        let user_id = "{{ user.id }}";
+        let url = "/notification/" + user_id;
+        let ulElement = document.getElementById('notify2');
+        fetch(url, {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken}})
+            .then (response => response.json())
+            .then(data => {
+                if (data.message === 'success') {
+                    let bellCount = document.getElementById('bellCount');
+                    bellCount.innerHTML = "";
+                    let linkElement = document.getElementById('bellAnchor');
+                    if (bellCount.textContent.trim() === "") {
+                      linkElement.setAttribute('data-bs-toggle', '');
+                    }
+                    let liItems = ulElement.querySelectorAll('li');
+                    let itemsToRemove = Array.from(liItems).slice(2, -1);
+                    itemsToRemove.forEach(function(item) {
+                        item.remove();
+                    });
+                    let message = 'Notification cleared successfully!';
+                    let toastBg = "bg-info";
+                    let toastHeader = 'Information';
+                    displayToastMessage(message, toastBg, toastHeader);
+                } else {
+                    let message = data.message;
+                    let toastBg = "bg-danger";
+                    let toastHeader = 'Error';
+                    displayToastMessage(message, toastBg, toastHeader);
+                }
+            }).catch(error => {
+                let message = 'Error Clearing Notification:-' + error;
+                let toastBg = "bg-danger";
+                let toastHeader = 'Error';
+                displayToastMessage(message, toastBg, toastHeader);
+            });
+    }
+    
+    function changeNotificationStatus(notification_id, detail_url){
+        let url = "/notification/open/" + notification_id;
+        let csrfToken = getCsrfToken();
+        let ulElement = document.getElementById('notify2');
+        fetch(url, {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken}})
+            .then (response => response.json())
+            .then(data => {
+                if (data.message === 'success') {
+                    let bellCount = document.getElementById('bellCount');
+                    let count = parseInt(bellCount.innerHTML);
+                    if (count === 1) {
+                        bellCount.innerHTML = "";
+                    } else {
+                        bellCount.innerHTML = (count - 1).toString();
+                    }
+                    let linkElement = document.getElementById('bellAnchor');
+                    if (bellCount.textContent.trim() === "") {
+                      linkElement.setAttribute('data-bs-toggle', '');
+                    }
+                    let liItems = ulElement.querySelectorAll('li');
+                    let itemsToRemove = Array.from(liItems).slice(2, -1);
+                    itemsToRemove.forEach(function(item) {
+                        item.remove();
+                    });
+                    window.location.href = detail_url;
+                    let message = 'Notification cleared successfully!';
+                    let toastBg = "bg-info";
+                    let toastHeader = 'Information';
+                    displayToastMessage(message, toastBg, toastHeader);
+                } else {
+                    let message = data.message;
+                    let toastBg = "bg-danger";
+                    let toastHeader = 'Error';
+                    displayToastMessage(message, toastBg, toastHeader);
+                }
+            }).catch(error => {
+                let message = 'Error Clearing Notification:-' + error;
+                let toastBg = "bg-danger";
+                let toastHeader = 'Error';
+                displayToastMessage(message, toastBg, toastHeader);
+            });
+    }
+</script>
+{% endif %}

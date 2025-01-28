@@ -1,0 +1,32 @@
+<div id="memo-results">
+        {% if page_obj %}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">S.No</th>  <!-- Added Serial Number Column -->
+                        <th>Memo Reference</th>
+                        <th>Memo Subject</th>
+                        <th>Sent Date</th>
+                        <th>Sent By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detail in page_obj %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>  <!-- Displaying Serial Number -->
+                        <td><a href="{% url 'memo_detail' detail.memo.id %}">{{ detail.memo.reference_number }}</a></td>
+                        <td><a href="{% url 'memo_detail' detail.memo.id %}">{{ detail.memo.subject }}</a></td>
+                        <td>{{ detail.sent_date|date:"Y-m-d H:i" }}</td>
+                        <td>{{ detail.sent_by.first_name }} {{ detail.sent_by.last_name }}</td>
+                    </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No memos found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No memo details have been sent to DMS yet.</p>
+        {% endif %}
+    </div>

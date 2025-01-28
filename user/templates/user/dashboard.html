@@ -1,0 +1,214 @@
+<!-- dashboard.html -->
+{% extends 'base.html' %}
+
+{% block contentIcon %}
+    bi-speedometer2
+{% endblock %}
+
+{% block contentTitle %}
+    Dashboard
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <form method="post">
+        {% csrf_token %}
+        <div class="row">
+            <!-- Always display Drafts, Incoming, Outgoing -->
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-secondary">
+                    <div class="inner">
+                        <h3>{{ draft_memo_count }}</h3>
+                        <p>Drafts</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-bag"></i>
+                    </div>
+                    <a href="{% url 'draft_memo_list' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>{{ incoming_memo_count }}</h3>
+                        <p>Incoming</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-bag"></i>
+                    </div>
+                    <a href="{% url 'incoming_memo_list' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-dark">
+                    <div class="inner">
+                        <h3>{{ outgoing_memo_count }}</h3>
+                        <p>Outgoing</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-stats-bars"></i>
+                    </div>
+                    <a href="{% url 'outgoing_memo_list' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+        </div> <!-- Closing the first row -->
+
+        <div class="row"> <!-- Opening the second row -->
+            <!-- This row now starts fresh, ensuring equal rows -->
+            {% if 'external' in preferences %}
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-pink">
+                    <div class="inner">
+                        <h3>{{ external_memo_count }}</h3>
+                        <p>External</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-pie-graph"></i>
+                    </div>
+                    <a href="{% url 'external_memo_list' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if 'personal' in preferences %}
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>{{ personal_memo_count }}</h3>
+                        <p>Personal</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-person-add"></i>
+                    </div>
+                    <a href="{% url 'personal_memo_list' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if 'approved' in preferences %}
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>{{ approved_memo_count }}</h3>
+                        <p>Approved</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-stats-bars"></i>
+                    </div>
+                    <a href="{% url 'approved_memo_list' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if 'closed' in preferences %}
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>{{ closed_memo_count }}</h3>
+                        <p>Closed</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-person-add"></i>
+                    </div>
+                    <a href="{% url 'closed_memo_list' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if 'myfiles' in preferences %}
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-blue">
+                    <div class="inner">
+                        <h3>{{ my_files_count }}</h3>
+                        <p>My Files</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-pie-graph"></i>
+                    </div>
+                    <a href="{% url 'index' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+            {% endif %}
+        </div> <!-- Closing the second row -->
+    </form>
+    {% if 'graph' in preferences %}
+        <canvas id="memoBarChart"></canvas>
+    {% endif %}
+</div>
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+<script>
+    // Retrieve memo counts data passed from Django view
+    var memoCountsData = {{ memo_counts_data|safe }};
+
+    // Get canvas element
+    var ctx = document.getElementById('memoBarChart').getContext('2d');
+
+    // Create bar chart
+    var memoBarChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(memoCountsData),
+            datasets: [{
+                label: 'Drafts',
+                data: Object.values(memoCountsData).map(entry => entry.draft_count),
+                backgroundColor: 'rgba(100, 100, 100, 0.8)',  // Darker gray with 80% opacity
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1,
+                barThickness: 12,
+
+            }, {
+                label: 'Incoming',
+                data: Object.values(memoCountsData).map(entry => entry.incoming_count),
+                backgroundColor: 'rgba(0, 188, 212, 0.8)',  // Bright turquoise with 80% opacity
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1,
+                barThickness: 12,
+            }, {
+                label: 'Outgoing',
+                data: Object.values(memoCountsData).map(entry => entry.outgoing_count),
+                backgroundColor: 'rgba(34, 34, 34, 0.8)',  // Dark gray with 80% opacity
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1,
+                barThickness: 12,
+            }, {
+                label: 'External',
+                data: Object.values(memoCountsData).map(entry => entry.external_count),
+                backgroundColor: 'rgba(255, 105, 180, 0.8)',  // Vibrant pink with 80% opacity
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1,
+                barThickness: 12,
+            }, {
+                label: 'Personal',
+                data: Object.values(memoCountsData).map(entry => entry.personal_count),
+                backgroundColor: 'rgba(255, 255, 0, 0.8)',  // Bright yellow with 80% opacity
+                borderColor: 'rgba(255, 206, 86, 1)',
+                borderWidth: 1,
+                barThickness: 12,
+            }, {
+                label: 'Approved',
+                data: Object.values(memoCountsData).map(entry => entry.approved_count),
+                backgroundColor: 'rgba(0, 128, 0, 0.8)',  // Dark green with 80% opacity
+                borderColor: 'rgba(255, 159, 64, 1)',
+                borderWidth: 1,
+                barThickness: 12,
+            }, {
+                label: 'Closed',
+                data: Object.values(memoCountsData).map(entry => entry.closed_count),
+                backgroundColor: 'rgba(255, 0, 0, 0.8)',  // Bright red with 80% opacity
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1,
+                barThickness: 12,
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

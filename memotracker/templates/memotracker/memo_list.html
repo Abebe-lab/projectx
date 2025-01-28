@@ -1,0 +1,419 @@
+{% extends 'base.html' %}
+
+{% load custom_filters %} 
+
+{% block title %} {{ listName }}s {% endblock %}
+{% block contentIcon %}
+    {% if listName == 'Draft Memo' %}
+        bi-file-earmark
+    {% elif listName == 'Outgoing Memo' %}
+        bi-send-fill
+    {% elif listName == 'Incoming Memo' %}
+        bi-inbox-fill
+    {% elif listName == 'External Letter' %}
+        bi-upc-scan
+    {% elif listName == 'Personal Memo' %}
+        bi-file-person-fill
+    {% elif listName == 'Approved Memo' %}
+        bi-check2-circle
+    {% elif listName == 'Sent Memo' %}
+        bi-send-check-fill
+    {% elif listName == 'Closed Memo' %}
+        bi-file-zip-fill
+    {% endif %}
+{% endblock %}
+{% block contentTitle %} {{  listName }}s {% endblock %}
+
+{% block content %}
+    <script>
+        let back_btn_url = "{{ back_btn_url }}";
+        let list_name = "{{ listName }}";
+        localStorage.setItem('backBtnUrl', back_btn_url);
+        localStorage.setItem('listName', list_name);
+    </script>
+
+    <form method="GET" id="filterForm">
+        <div class="d-flex gap-3">
+            <label for="option" class="my-auto">Filter by:</label>
+            <div class="form-group my-auto">
+                <select class="form-select" name="option" id="option">
+                    <option value="All" selected>All</option>
+                    <option value="reference_number">Reference Number</option>
+                    <option value="subject">Subject</option>
+                    {% if listName == 'Incoming Memo' %}
+                         <option value ="sender">Sender</option>
+                    {% elif listName == 'Outgoing Memo' %}
+                         <option value ="receiver">Receiver</option>
+                    {% elif listName == 'Personal Memo' %}
+                         <option value ="receiver">Receiver</option>
+                    {% elif listName == 'External Letter' %}
+                         <option value ="sender">Sender</option>
+                    {% endif %}
+                    <option value="memo_date">Date</option>
+                    <option value="urgent">Urgent</option>
+                </select>
+
+            </div>
+            <div id="value-input-container" class="form-group my-auto">
+                <input type="text" class="form-control" name="value" id="value-input" placeholder="Enter value">
+            </div>
+            <button type="submit" class="btn btn-primary">Filter</button>
+
+        </div>
+    </form>
+     <script>
+
+        const optionSelect = document.getElementById('option');
+        const valueInputContainer = document.getElementById('value-input-container');
+
+        const listName = "{{ listName }}";
+
+        optionSelect.addEventListener('change', function() {
+            const selectedOption = optionSelect.value;
+            if (selectedOption === 'memo_date') {
+                valueInputContainer.innerHTML = '<input type="date" name="value" class="form-control" id="value-input" value="{{ value }}">';
+            } else if (selectedOption === 'urgent') {
+                valueInputContainer.style.display = 'none';
+            } else if (selectedOption === 'sender' || selectedOption === 'receiver') {
+
+                // Make an AJAX request to fetch the list of users based on the model name
+                let url;
+                if (listName === 'Incoming Memo' || listName === 'Outgoing Memo' || listName === 'Personal Memo') {
+                    url = '/organogram/get_business_units/';
+                // } else if (listName === 'Personal Memo') {
+                //    url = '/organogram/get_personal_users/';
+                } else if (listName === 'External Letter') {
+                    url = '/organogram/get_external_customers/';
+                }
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Create a select element and populate it with the list of users
+                        const selectElement = document.createElement('select');
+                        selectElement.name = 'value';
+                        selectElement.className = 'form-select';
+                        selectElement.id = 'value-input';
+
+                        data.forEach(user => {
+                            const optionElement = document.createElement('option');
+                            optionElement.value = user.id;
+                            optionElement.textContent = user.name;
+                            selectElement.appendChild(optionElement);
+                        });
+
+                        // Replace the value input container's content with the select element
+                        valueInputContainer.innerHTML = '';
+                        valueInputContainer.appendChild(selectElement);
+                        valueInputContainer.style.display = 'block';
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            } else {
+                valueInputContainer.innerHTML = '<input type="text" name="value" class="form-control" id="value-input" placeholder="Enter value" value="{{ value }}">';
+                valueInputContainer.style.display = 'block';
+            }
+        });
+        let baseUrl = window.location.protocol + '//' + window.location.host + '/memotracker/';
+        let filterForm = document.getElementById('filterForm');
+        let backBtnUrl = localStorage.getItem('backBtnUrl');
+        filterForm.setAttribute('action', baseUrl + backBtnUrl);
+    </script>
+
+      {% if current_view == 'external_memo_list' and business_unit.strip|lower == 'record and archive service' %}
+        <p class="text-end mb-3">
+            <a href="{{ new_memo_link }}" class="btn btn-primary"><i class="bi bi-file-earmark-plus"></i> New Letter</a>
+        </p>
+    {% elif current_view != 'external_memo_list' %}
+        <p class="text-end mb-3">
+            <a href="{% url 'create_memo' %}" class="btn btn-primary"><i class="bi bi-file-earmark-plus"></i> New Memo</a>
+        </p>
+    {% endif %}
+
+    {% if page_obj %}
+        <div class="row table-responsive">
+            <table class="table table-hover" id="memo-list">
+                <caption class="text-center">List of {{ listName }}s</caption>
+                <thead class="table-dark">
+
+                    <tr style="border-top: 2px solid black; border-bottom: 2px solid black;" >
+                        <th scope="col" rowspan="2" class="w-1"></th>
+                        <th scope="col" colspan="2" class="pl-5 w-15">Memo Details</th>
+                         <th scope="col" rowspan="2" class="w-20">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="table-group-divider">
+                    {% for memo in page_obj %}
+                        <tr style="cursor: pointer;">
+                            <th  class="w-1" scope="row">{{ page_obj.start_index|add:forloop.counter0 }}</th>
+                            <td class="w-15" onclick="window.location.href='{% url 'memo_detail' pk=memo.pk list_name=listName %}'">
+                                {% if listName == 'Incoming Memo' or listName == 'External Letter' %}
+                                    {% if memo|get_route_status:request == 'Not Seen' %}
+                                        <strong class="mt-3 text-primary-emphasis">{{ memo.reference_number }}</strong>
+                                    {% else %}
+                                        <span class="mt-3 text-primary-emphasis">{{ memo.reference_number }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="mt-3 text-primary-emphasis">{{ memo.reference_number }}</span>
+                                {% endif %}
+                                {% if memo.public %}
+                                    <span class="px-2 py-1 ml-2 badge border border-success-subtle rounded-pill text-info">Public</span>
+                                {% endif %}
+                                {% if listName == 'Incoming Memo' or listName == 'External Letter' %}
+                                    {% if memo.urgent %}
+                                        <div class="mt-1 text-danger">
+                                            <i class="bi bi-toggle2-on"></i>
+                                            <small class="urgent-element">Urgent</small>
+                                        </div>
+                                    {% endif %}
+                                    {% if memo.due_date %}
+                                        <div class="mt-1 text-danger">
+                                            <i class="bi bi-stopwatch fs-6"></i>
+                                            <small class="due-date-element" id="memoListDueDate-{{ forloop.counter }}">
+                                                {% if memo.in_english %}
+                                                    {{ memo.due_date|date:"d/m/Y" }}
+                                                {% else %}
+                                                    <script>
+                                                        document.addEventListener('DOMContentLoaded', function() {
+                                                            let dueDate = "{{ memo.due_date|date:"Y-m-d" }}";
+                                                            document.getElementById('memoListDueDate-{{ forloop.counter }}').textContent = convertDateToEC(dueDate);
+                                                        });
+                                                    </script>
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    {% if memo.urgent %}
+                                        <div class="mt-1 text-danger">
+                                            <i class="bi bi-toggle2-on"></i>
+                                            <small>Urgent</small>
+                                        </div>
+                                    {% endif %}
+                                    {% if memo.due_date %}
+                                        <div class="mt-1 text-danger">
+                                            <i class="bi bi-stopwatch fs-6"></i>
+                                            <small id="memoListDueDate-{{ forloop.counter }}">
+                                                {% if memo.in_english %}
+                                                    {{ memo.due_date|date:"d/m/Y" }}
+                                                {% else %}
+                                                    <script>
+                                                        document.addEventListener('DOMContentLoaded', function() {
+                                                            let dueDate = "{{ memo.due_date|date:"Y-m-d" }}";
+                                                            document.getElementById('memoListDueDate-{{ forloop.counter }}').textContent = convertDateToEC(dueDate);
+                                                        });
+                                                    </script>
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                            <td class="{% if not memo.attachments.all %}pb-0{% endif %}" onclick="window.location.href='{% url 'memo_detail' pk=memo.pk list_name=listName %}'">
+                                <div class="d-flex w-60 justify-content-between">
+                                    {% if listName == 'Incoming Memo' or listName == 'External Letter' %}
+                                        {% if memo|get_route_status:request == 'Not Seen' %}
+                                            <h5 class="mb-1 text-primary-emphasis">
+                                                <strong>
+                                                    {{ memo.get_memo_owner }}
+                                                </strong></h5>
+                                            <small class="text-info" id="memoListMemoDate-{{ forloop.counter }}">
+                                                <strong>
+                                                    {% if memo.in_english %}
+                                                        {{ memo.memo_date|date:"d/m/Y" }}
+                                                    {% else %}
+                                                        <script>
+                                                            document.addEventListener('DOMContentLoaded', function() {
+                                                                let memoDate = "{{ memo.memo_date|date:"Y-m-d" }}";
+                                                                document.getElementById('memoListMemoDate-{{ forloop.counter }}').textContent = convertDateToEC(memoDate);
+                                                            });
+                                                        </script>
+                                                    {% endif %}
+                                                </strong>
+                                            </small>
+                                        {% else %}
+                                            <h5 class="mb-1 text-primary-emphasis">{{ memo.get_memo_owner }}</h5>
+                                            <small class="text-info" id="memoListMemoDate-{{ forloop.counter }}">
+                                            {% if memo.in_english %}
+                                                {{ memo.memo_date|date:"d/m/Y" }}
+                                            {% else %}
+                                                <script>
+                                                    document.addEventListener('DOMContentLoaded', function() {
+                                                        let memoDate = "{{ memo.memo_date|date:"Y-m-d" }}";
+                                                        document.getElementById('memoListMemoDate-{{ forloop.counter }}').textContent = convertDateToEC(memoDate);
+                                                    });
+                                                </script>
+                                            {% endif %}
+                                        </small>
+                                        {% endif %}
+                                    {% else %}
+                                        <h6 class="text-primary-emphasis">
+                                            {% for destination in memo.get_memo_destination %}
+                                                <span>{{ destination }}</span>
+                                                {% with memo.get_memo_destination|length as array_length %}
+                                                    {% if array_length > 1 and forloop.counter < array_length%}
+                                                        {% if memo.in_english %}
+                                                            ,
+                                                        {% else %}
+                                                            ፣
+                                                        {% endif %}
+                                                    {% endif %}
+                                                {% endwith %}
+                                            {% endfor %}
+                                        </h6>
+                                        <small class="text-info" id="memoListMemoDate-{{ forloop.counter }}">
+                                            {% if memo.in_english %}
+                                                {{ memo.memo_date|date:"d/m/Y" }}
+                                            {% else %}
+                                                <script>
+                                                    document.addEventListener('DOMContentLoaded', function() {
+                                                        let memoDate = "{{ memo.memo_date|date:"Y-m-d" }}";
+                                                        document.getElementById('memoListMemoDate-{{ forloop.counter }}').textContent = convertDateToEC(memoDate);
+                                                    });
+                                                </script>
+                                            {% endif %}
+                                        </small>
+                                    {% endif %}
+                                </div>
+                                <div class="d-flex w-60 justify-content-between {% if listName == 'External Memo' %}mb-2{% endif %}">
+                                {% if listName == 'Incoming Memo' or listName == 'External Letter' %}
+                                        {% if memo|get_route_status:request == 'Not Seen' %}
+                                            <small class="mb-1 text-success-emphasis"><strong>{{ memo.subject }}</strong></small>
+                                        {% else %}
+                                            <small class="mb-1 text-success-emphasis">{{ memo.subject }}</small>
+                                        {% endif %}
+                                    {% else %}
+                                        <small class="mb-1 text-success-emphasis">{{ memo.subject }}</small>
+                                    {% endif %}
+
+                                </div>
+                                <small class="text-secondary text-opacity-75 pb-0" id="memo_content_{{ forloop.counter }}">
+
+{#                                    {% if memo.content|length > 200 %}#}
+{#                                      {{ memo.content|safe|slice:":200" }}...#}
+{#                                    {% else %}#}
+{#                                      {{ memo.content|safe }}#}
+{#                                    {% endif %}#}
+                                </small>
+                                <script>
+                                    let memoContent_{{ forloop.counter }} = "";
+                                    if (/\s/.test(`{{ memo.content|safe }}`)) {
+                                      memoContent_{{ forloop.counter }} = `{{ memo.content|safe }}`.split("\n")[0].trim();
+                                    } else {
+                                      memoContent_{{ forloop.counter }} = `{{ memo.content|safe }}`;
+                                    }
+                                    if (memoContent_{{ forloop.counter }}.length > 200) {
+                                        memoContent_{{ forloop.counter }} = memoContent_{{ forloop.counter }}.slice(0, 200) + " ...";
+                                    }
+                                    let memo_content{{ forloop.counter }} = document.getElementById('memo_content_{{ forloop.counter }}');
+                                    memo_content{{ forloop.counter }}.innerHTML = memoContent_{{ forloop.counter }};
+                                </script>
+                                {% if memo.attachments.all %}
+                                    <div>
+                                        {% for attachment in memo.attachments.all %}
+                                            <a href="#" target="_blank" class="ml-3">
+                                                <small class="pl-2 pr-2 pt-1 pb-1 border border-secondary border-opacity-25 rounded">
+                                                    <i class="bi bi-paperclip"></i>{{ attachment.document.title }}
+                                                </small>
+                                            </a>
+                                        {% endfor %}
+
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td class="text-center align-middle w-20">
+                                <div class="dropdown">
+                                    <a class="icon-link" id="horizontalDropdown" href="#" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                      <i class="bi bi-three-dots-vertical"></i>
+                                    </a>
+                                <div class="dropdown-menu text-center" style="{% if listName == 'Draft Memo' %} min-width: 16rem; {% endif %}" aria-labelledby="horizontalDropdown">
+                                {% if listName == 'Draft Memo' and memo.content_type.model == 'businessunit' %}
+                                    {% if user_role.role.is_manager or user_role.deligated %}
+                                        <a class="btn btn-light-outline text-success" href="{% url 'memo_approval_history' memo_id=memo.pk %}" title="Approval">
+                                             <i class="bi bi-spellcheck fs-6"></i>
+                                        </a>
+                                        <a class="btn btn-light-outline text-success" href="{% url 'memo_route_history' memo_id=memo.pk list_name=listName %}" title="Send Memo">
+                                            <i class="bi bi-send-check fs-6"></i>
+                                        </a>
+                                    {% else %}
+                                        <a class="btn btn-light-outline text-success" href="{% url 'memo_approval_history' memo_id=memo.pk %}" title="Approval">
+                                             <i class="bi bi-spellcheck fs-6"></i>
+                                        </a>
+                                    {% endif %}
+                                {% else %}
+                                    <a class="btn btn-light-outline text-success" href="{% url 'memo_route_history' memo_id=memo.pk list_name=listName %}"
+                                       title=" {% if listName == 'Draft Memo' %} Send Memo {% else %} Forward Memo {% endif %}">
+                                        {% if listName == 'Draft Memo' %}
+                                            <i class="bi bi-send-check fs-6"></i>
+                                        {% else %}
+                                            <i class="bi bi-fast-forward fs-6"></i>
+                                        {% endif %}
+                                    </a>
+                                {% endif %}
+
+
+                                {% if memo.attachments.all or listName == 'Draft Memo' %}
+                                    <a href="{% url 'memo_attachments_list' pk=memo.pk %}" class="btn btn-light-outline text-primary"><i class="bi bi-paperclip fs-6"></i></a>
+                                {% endif %}
+                                {% if memo.status == 'draft' %}
+                                    <a href="{% url 'edit_memo' memo.id %}" class='btn btn-light-outline text-warning'> <i class="bi bi-pencil-square fs-6"></i></a>
+                                    <a class="btn btn-light-outline text-danger" href="#"
+                                       data-bs-toggle="modal" data-bs-target="#confirmationModal"
+                                       data-bs-action="delete_memo" data-record-id="{{  memo.id }}"
+                                       data-modal-body-class="text-danger"
+                                       data-bs-title="Delete Memo" data-bs-body="Are you sure to delete memo '{{ memo.subject }}'?">
+                                       <i class="bi bi-trash3-fill fs-6"></i>
+                                    </a>
+                                {% endif %}
+                                </div>
+                                </div>
+                            </td>
+
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+         <div class="pagination justify-content-center">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                {% endif %}
+
+                {% for page in page_obj.paginator.page_range %}
+                    {% if page_obj.number == page %}
+                        <li class="page-item active"><span class="page-link">{{ page }}</span></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page }}">{{ page }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                {% endif %}
+            </ul>
+        </div>
+    {% else %}
+        <h3 class="text-center"> No memo found </h3>
+    {% endif %}
+
+    <script>
+        const tableRows = document.querySelectorAll('#memo-list tr')
+        tableRows.forEach((row) => {
+            const urgentElement = row.querySelector('.urgent-element');
+            const dueDateElement = row.querySelector('.due-date-element');
+            if (urgentElement) {
+                urgentElement.classList.add('urgent-blink');
+            }
+            if (dueDateElement) {
+                dueDateElement.classList.add('due-date-blink');
+            }
+        });
+    </script>
+
+{% endblock %}

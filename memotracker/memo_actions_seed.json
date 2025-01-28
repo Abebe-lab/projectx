@@ -1,0 +1,80 @@
+[
+  {
+    "_command":  "python manage.py loaddata memotracker/memo_actions_seed.json",
+    "model": "memotracker.memoaction",
+    "fields": {
+      "description": "For your Information",
+      "description_am": "እንዲያውቁት"
+    }
+  },
+  {
+    "model": "memotracker.memoaction",
+    "fields": {
+      "description": "For your Comment",
+      "description_am": "ሀሳብ ይስጡበት"
+    }
+  },
+  {
+    "model": "memotracker.memoaction",
+    "fields": {
+      "description": "For your Decision",
+      "description_am": "ለውሳኔ"
+    }
+  },
+  {
+    "model": "memotracker.memoaction",
+    "fields": {
+      "description": "For your Signature",
+      "description_am": "ለፊርማ"
+    }
+  },
+  {
+    "model": "memotracker.memoaction",
+    "fields": {
+      "description": "As per your request",
+      "description_am": "በጠየቁት መሠረት"
+    }
+  },
+  {
+    "model": "memotracker.memoaction",
+    "fields": {
+      "description": "For your Immediate Action",
+      "description_am": "እንዲፈፀም / እንዲከናወን"
+    }
+  },
+  {
+    "model": "memotracker.memoaction",
+    "fields": {
+      "description": "Submit the File",
+      "description_am": "ከማህደሩ ጋር ይቅረብ"
+    }
+  },
+  {
+    "model": "memotracker.memoaction",
+    "fields": {
+      "description": "Take up with Me",
+      "description_am": "እንነጋገርበት"
+    }
+  },
+  {
+    "model": "memotracker.memoaction",
+    "fields": {
+      "description": "Prepare an Answer",
+      "description_am": "መልስ ይዘጋጅ"
+    }
+  },
+  {
+    "model": "memotracker.memoaction",
+    "fields": {
+      "description": "For Permission",
+      "description_am": "እንዲፈቀድ"
+    }
+  },
+  {
+    "model": "memotracker.memoaction",
+    "fields": {
+      "description": "Attach with File",
+      "description_am": "ከማህደሩ ጋር ይቀመጥ"
+    }
+  }
+]

@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+
+{% block title %} Memo Route {% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row text-center mb-4">
+                <h1 class="display-6">{{ title }}</h1>
+        </div>
+        <div class="row justify-content-center">
+            <div class="form-group col-lg-6">
+                <form method="POST" id="routing">
+                    {% csrf_token %}
+                    <fieldset class="row border">
+                        <div class="col-6" id="recipientSelector">
+                            <ul class="nav nav-tabs">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-bs-toggle="tab" aria-current="page" href="#externalTab" id="externalTabLink">External</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#businessUnitTab" id="businessUnitTabLink">Business Unit</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#userTab" id="userTabLink">User</a>
+                                </li>
+                            </ul>
+                            <div class="tab-content mt-3">
+                                <div class="tab-pane fade show active" id="externalTab">
+                                    <div id="externalList">
+                                        <div class="form-group mb-2">
+                                            <label for="{{ form.external.id_for_label }}" class="d-none">External Customer:</label>
+                                            {{ form.external }}
+                                        </div>
+                                         <button type="button" id="sendInternalMemo"
+                                                onclick="addCustomer('{% url 'add_new_customer' caller='routing' %}', 'customer', 'Add Customer');"
+                                                class="btn btn-sm btn-primary mb-1" data-bs-toggle="modal" data-bs-target="#customerModal">
+                                           Add Customer
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="businessUnitTab">
+                                    <div id="buList">
+                                        <div class="form-group">
+                                            <label for="{{ form.business_unit.id_for_label }}" class="d-none">Business Unit:</label>
+                                            {{ form.business_unit }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="userTab">
+                                    <div id="buList2">
+                                        <div class="form-group">
+                                            <label for="{{ form.business_unit2.id_for_label }}">Business Unit:</label>
+                                            {{ form.business_unit2 }}
+                                        </div>
+                                    </div>
+                                    <div id="userList">
+                                        <div class="form-group">
+                                            <label for="{{ form.to_user.id_for_label }}">User:</label>
+                                            {{ form.to_user }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-2 text-center m-auto">
+                                <div id="toAllRecipient">
+                                    <input id="allRecipients" style="width: 15px; height: 15px;" type="checkbox">
+                                    <label for="allRecipients">All</label>
+                                </div>
+                                <div class="d-none" id="carbonCopy">
+                                    {{ form.carbon_copy }}
+                                    <label for="{{ form.carbon_copy.id_for_label }}">Cc</label>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-secondary btn-sm" id="addRecipientBtn" title="Add Recipient">
+                                        <i class="bi bi-caret-right"></i>
+                                    </button>
+                                </div>
+                        </div>
+                        <div class="col mt-1 mr-1 mb-1 border border recipient-list" id="recipientListDiv" style="overflow: auto;"></div>
+                        <div class="d-none" id="carbonCopyIdentifier">
+                            {{ form.carbon_copy }}
+                            <label for="{{ form.carbon_copy.id_for_label }}">Carbon Copy</label>
+                        </div>
+
+                    </fieldset>
+                    <fieldset class="row mt-3 pt-3 border">
+                        {% if form.memo_action %}
+                        <div>
+                            <div class="form-group">
+                                <label for="{{ form.memo_action.id_for_label }}">Memo Action:</label>
+                                {{ form.memo_action }}
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if form.remark %}
+                        <div>
+                            <div class="form-group">
+                                <label for="{{ form.remark.id_for_label }}">Remark:</label>
+                                {{ form.remark }}
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if form.comment %}
+                        <div>
+                            <div class="form-group">
+                                <label for="{{ form.comment.id_for_label }}">Comment:</label>
+                                {{ form.comment }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </fieldset>
+                    {{ form.form_type }}
+                    {{ form.current_user_bu }}
+                    {{ form.manager }}
+                    {{ form.delegate }}
+                    {{ form.memo }}
+                    {{ form.memo_status }}
+                    {{ form.content_type_routing }}
+                    {{ form.is_to_external }}
+                    {{ form.from_user }}
+                    {{ form.to_user_list }}
+{#                    {{ form.as_p }}#}
+                    <div class="d-flex justify-content-end text-secondary" id="comment_character_counter"></div>
+
+{#                    <button class="btn btn-primary" type="submit">Send</button>#}
+{#                    <a class="btn btn-dark" href="#">Cancel</a>#}
+
+                    <div class="d-flex justify-content-end gap-3 my-3" id="routingFormBtns">
+
+                        <a id="memoRouteCancel" type="submit" class="btn btn-secondary d-flex-end"> <i class="bi bi-x mx-2"></i>Cancel</a>
+                        <button type="submit" class="btn btn-success d-flex-end"> <i class="bi bi-send mx-2"></i>Send</button>
+                    </div>
+
+                </form>
+                <form method="POST" id="routingPreview">
+                    <fieldset class="row mt-3 pt-3 border">
+                        <div id="buList">
+                            <div class="form-group">
+                                <label for="{{ form.business_unit.id_for_label }}">Business Unit:</label>
+                                {{ form.business_unit }}
+                            </div>
+                        </div>
+                        <div id="userList">
+                            <div class="form-group">
+                                <label for="{{ form.to_user.id_for_label }}">User:</label>
+                                {{ form.to_user }}
+                            </div>
+                        </div>
+                        <div class="d-none" id="carbonCopyIdentifier">
+                            {{ form.carbon_copy }}
+                            <label for="{{ form.carbon_copy.id_for_label }}">Carbon Copy</label>
+                        </div>
+                    </fieldset>
+                    <fieldset class="row mt-3 pt-3 border">
+                        {% if form.memo_action %}
+                            <div id="memoAction">
+                                <div class="form-group">
+                                    <label for="{{ form.memo_action.id_for_label }}">Memo Action:</label>
+                                    {{ form.memo_action }}
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% if form.remark %}
+                            <div id="memoRemark">
+                                <div class="form-group">
+                                    <label for="{{ form.remark.id_for_label }}">Remark:</label>
+                                    {{ form.remark }}
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% if form.comment %}
+                            <div id="memoComment">
+                                <div class="form-group">
+                                    <label for="{{ form.comment.id_for_label }}">Comment:</label>
+                                    {{ form.comment }}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </fieldset>
+                    {{ form.form_type }}
+                </form>
+            </div>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sendButton = document.getElementById('sendButton');
+
+        // Initially disable the Send button
+        sendButton.disabled = true;
+
+        function updateSendButtonState() {
+            // Get references to the select fields
+            const externalSelect = document.getElementById('routingExternal');
+            const businessUnitSelect = document.getElementById('routingBU');
+            const userSelect = document.getElementById('routingToUser');
+
+            // Check if any options are selected
+            const isExternalSelected = externalSelect.selectedOptions.length > 0;
+            const isBusinessUnitSelected = businessUnitSelect.selectedOptions.length > 0;
+            const isUserSelected = userSelect.selectedOptions.length > 0;
+
+            // Enable the Send button if any selection is made
+            sendButton.disabled = !(isExternalSelected || isBusinessUnitSelected || isUserSelected);
+        }
+
+        // Add event listeners to the select fields to check their values on change
+        externalSelect.addEventListener('change', updateSendButtonState);
+        businessUnitSelect.addEventListener('change', updateSendButtonState);
+        userSelect.addEventListener('change', updateSendButtonState);
+
+        // Initial check on page load
+        updateSendButtonState();
+    });
+</script>
+{% endblock %}

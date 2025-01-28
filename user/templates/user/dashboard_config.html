@@ -1,0 +1,101 @@
+<!-- dashboard_configuration.html -->
+{% extends 'base.html' %}
+
+{% block contentIcon %}
+    bi-speedometer
+{% endblock %}
+{% block contentTitle %}
+    Dashboard Setting
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+      <div class="card shadow">
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+              <h4>Select Dashboard Elements:</h4>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="select-all" name="select_all">
+                    <label class="form-check-label" for="select-all">Select All</label>
+                </div>
+<!--              <div class="form-check">-->
+<!--                <input type="checkbox" class="form-check-input" id="incoming" name="elements" value="incoming" {% if 'incoming' in preferences %}checked{% endif %}>-->
+<!--                <label class="form-check-label" for="incoming">Incoming</label>-->
+<!--              </div>-->
+<!--              <div class="form-check">-->
+<!--                <input type="checkbox" class="form-check-input" id="outgoing" name="elements" value="outgoing" {% if 'outgoing' in preferences %}checked{% endif %}>-->
+<!--                <label class="form-check-label" for="outgoing">Outgoing</label>-->
+<!--              </div>-->
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="personal" name="elements" value="personal" {% if 'personal' in preferences %}checked{% endif %}>
+                <label class="form-check-label" for="personal">Personal</label>
+              </div>
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="external" name="elements" value="external" {% if 'external' in preferences %}checked{% endif %}>
+                <label class="form-check-label" for="external">External</label>
+              </div>
+<!--              <div class="form-check">-->
+<!--                <input type="checkbox" class="form-check-input" id="drafts" name="elements" value="drafts" {% if 'drafts' in preferences %}checked{% endif %}>-->
+<!--                <label class="form-check-label" for="drafts">Drafts</label>-->
+<!--              </div>-->
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="approved" name="elements" value="approved" {% if 'approved' in preferences %}checked{% endif %}>
+                <label class="form-check-label" for="approved">Approved</label>
+              </div>
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="closed" name="elements" value="closed" {% if 'closed' in preferences %}checked{% endif %}>
+                <label class="form-check-label" for="closed">Closed</label>
+              </div>
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="myfiles" name="elements" value="myfiles" {% if 'myfiles' in preferences %}checked{% endif %}>
+                <label class="form-check-label" for="myfiles">My Files</label>
+              </div>
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="graph" name="elements" value="graph" {% if 'graph' in preferences %}checked{% endif %}>
+                <label class="form-check-label" for="graph">Graph</label>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Save Preferences</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  $(document).ready(function() {
+    // Function to handle select all checkboxes
+    function handleSelectAll() {
+      var allChecked = $('input[name="elements"]:checked').length === $('input[name="elements"]').length;
+      $('#select-all').prop('checked', allChecked);
+    }
+
+    // Select all checkboxes
+    $('#select-all').change(function() {
+      var isChecked = $(this).prop('checked');
+      $('input[name="elements"]').prop('checked', isChecked);
+    });
+
+    // Deselect all checkboxes
+    $('#deselect-all').change(function() {
+      var isChecked = $(this).prop('checked');
+      $('input[name="elements"]').prop('checked', !isChecked);
+    });
+
+    // Handle changes in individual checkboxes
+    $('input[name="elements"]').change(function() {
+      handleSelectAll();
+    });
+
+    // Initial state setup
+    handleSelectAll();
+  });
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+{% load static %}
+<script src="{% static 'ckeditor/ckeditor/ckeditor.js' %}"></script>
+<script src="{% static 'ckeditor/ckeditor/adapters/jquery.js' %}"></script>
+<link rel="stylesheet" href="{% static 'ckeditor/ckeditor/themes/default.css' %}">
+
+{% block title %} Share Document {% endblock %}
+{% block contentIcon %}
+    bi bi-upc-scan
+{% endblock %}
+{% block contentTitle %}
+ External Letter
+{% endblock %}
+{% block content %}
+<div class="container-fluid mt-4 text-center" style="margin-bottom: 50px;">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form action="{% url 'external_memo' %}" method="POST" id="createExternalMemoForm">
+                        {% csrf_token %}
+                        {{ form.media }}
+                        <h3><strong>External Letter Registration</strong></h3>
+
+                        <div class="border rounded px-3 py-2 mb-3 d-flex align-content-center">
+                            <div class="d-flex gap-2 align-items-center me-5" id="id_lang_section">
+                                <div class="form-check text-center">
+                                    {{ form.in_english }}
+                                </div>
+                                <label for="id_in_english" class="form-label mb-0">English</label>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-12 text-start">
+                                <label for="id_content_type" class="form-label">Organization: <span style="color: red;"> * </span></label>
+                                <div class="d-flex justify-content-center align-items-center">
+                                    <select name="customer" id="id_content_type" class="form-select" required>
+                                        <option value="" selected disabled>Select Customer</option>
+                                        {% for customer in org_list %}
+                                            <option value="{{ customer.id }}" {% if form.customer.value == customer.id %}selected{% endif %}>{{ customer.name_en }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <a href="{% url 'add_customer' %}" class="btn btn-primary ms-2" style="width: 230px;">
+                                        <i class="bi bi-file-earmark-plus"></i> Add Customer
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12 text-start">
+                                <label for="id_reference_number" class="form-label">Reference Number <span style="color: red;"> * </span></label>
+                                <input type="text" name="reference_number" id="id_reference_number" class="form-control" value="{{ form.reference_number.value|default:'' }}" placeholder="Enter Reference Number" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6 text-start">
+                                <label for="id_memo_date" class="form-label">Letter Date <span style="color: red;"> * </span></label>
+                                <div class="input-group">
+                                    <input type="text" name="memo_date" id="id_memo_date" class="form-control" placeholder="dd/mm/yyyy" required>
+                                    <span class="input-group-text" id="memo_date_icon" style="cursor: pointer;">
+                                        <i class="bi bi-calendar"></i>
+                                    </span>
+                                </div>
+                                {% if form.errors.memo_date %}
+                                    <div class="invalid-feedback">
+                                        {{ form.errors.memo_date }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-6 text-start">
+                                <label for="id_due_date" class="form-label">Due Date</label>
+                                <div class="input-group">
+                                    <input type="text" name="due_date" id="id_due_date" class="form-control" placeholder="dd/mm/yyyy">
+                                    <span class="input-group-text" id="due_date_icon" style="cursor: pointer;">
+                                        <i class="bi bi-calendar"></i>
+                                    </span>
+                                </div>
+                                {% if form.errors.due_date %}
+                                    <div class="invalid-feedback">
+                                        {{ form.errors.due_date }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12 text-start">
+                                <label for="id_subject" class="form-label">Subject <span style="color: red;"> * </span></label>
+                                <input type="text" name="subject" id="id_subject" class="form-control" value="{{ form.subject.value|default:'' }}" placeholder="Enter Subject" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12 text-start">
+                                <label for="id_document" class="form-label">Attachment <span style="color: red;"> * </span></label>
+                                <div class="d-flex justify-content-center align-items-center">
+                                    <select name="document" id="id_document" class="form-select" required>
+                                        <option value="" selected disabled>Select Document</option>
+                                        {% for document_id, document_title in form.fields.document.choices %}
+                                            <option value="{{ document_id }}">{{ document_title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="button" onclick="uploadDocument('{% url 'document_create' %}', 'add_document', 'New document');" class="btn btn-success ms-2" data-toggle="modal" data-target="#attachmentModal" style="width: 300px;">
+                                        <i class="bi bi-file-earmark-plus"></i> Add Document
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12 text-center">
+                                <a href="{% url 'external_memo_list' %}" class='btn btn-secondary me-3'><i class="bi bi-x"></i> Cancel</a>
+                                <button type="submit" class="visually-hidden" name="send_memo" id="sendMemo"><i class="bi bi-send-check mx-2"></i>Send</button>
+                                <button type="button" id="sendExternalMemo" onclick="memoRoute('{% url 'memo_route' %}', 'routing', 'Memo Forwarding', 'Send External Memo');" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#routeModal" disabled>
+                                    <i class="bi bi-send-check mx-2"></i> Send
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'modal.html' %}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.jqDatePicker/1.0.1/jquery.jqDatePicker.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let createExternalMemoForm = document.getElementById('createExternalMemoForm');
+        let sendExternalMemo = document.getElementById('sendExternalMemo');
+
+        const updateButtonState = () => {
+            let isFormValid = createExternalMemoForm.checkValidity();
+            sendExternalMemo.disabled = !isFormValid;
+        };
+
+        createExternalMemoForm.addEventListener('input', updateButtonState);
+
+        const toggleDatePickers = () => {
+            const lang = document.getElementById('id_in_english').checked;
+            const memoDate = document.getElementById('id_memo_date');
+            const dueDate = document.getElementById('id_due_date');
+
+            if (lang) {
+                initializeGregorianPicker(memoDate);
+                initializeGregorianPicker(dueDate);
+                document.getElementById('memo_date_icon').classList.add("d-none");
+                document.getElementById('due_date_icon').classList.add("d-none");
+            } else {
+                initializeEthiopianPicker(memoDate);
+                initializeEthiopianPicker(dueDate);
+                document.getElementById('memo_date_icon').classList.remove("d-none");
+                document.getElementById('due_date_icon').classList.remove("d-none");
+            }
+        };
+
+        window.addEventListener('load', () => {
+            updateButtonState(); // Check validity on load
+            toggleDatePickers(); // Initialize date pickers on load
+        });
+
+        document.getElementById('id_in_english').addEventListener('change', () => {
+            toggleDatePickers();
+            updateButtonState();
+        });
+
+        const initializeEthiopianPicker = (element) => {
+            const todayEthiopian = $.calendars.instance('ethiopian', 'am').today();
+            $('#id_memo_date').attr('type', 'text').calendarsPicker({
+                calendar: $.calendars.instance('ethiopian', 'am'),
+                dateFormat: "dd/mm/yyyy",
+                maxDate: todayEthiopian // Disable dates after today
+            });
+            $('#id_due_date').attr('type', 'text').calendarsPicker({
+                calendar: $.calendars.instance('ethiopian', 'am'),
+                dateFormat: "dd/mm/yyyy",
+                minDate: todayEthiopian // Disable dates before today
+            });
+        };
+
+        const initializeGregorianPicker = (element) => {
+            $(element).calendarsPicker('destroy');
+            $(element).attr('type', 'date');
+            const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+            $('#id_memo_date').attr('max', today);
+            $('#id_due_date').attr('min', today); // Set min date for due date
+        };
+
+        // Event listeners for date icons to open the date picker
+        document.getElementById('memo_date_icon').addEventListener('click', function () {
+            $(document.getElementById('id_memo_date')).calendarsPicker('show');
+        });
+
+        document.getElementById('due_date_icon').addEventListener('click', function () {
+            $(document.getElementById('id_due_date')).calendarsPicker('show');
+        });
+
+        // Add form submission handling
+        createExternalMemoForm.addEventListener('submit', function(event) {
+            // Prevent the default form submission
+            event.preventDefault();
+
+            // Get the memo date and due date values
+            const memoDateInput = document.getElementById('id_memo_date');
+            const dueDateInput = document.getElementById('id_due_date');
+
+            // Check if the input type is date (Gregorian)
+            if (memoDateInput.type === "date") {
+                // Keep the value as is for Gregorian
+            } else {
+                // Convert the date for Ethiopian Calendar
+                memoDateInput.value = convertDateToGC(memoDateInput.value);
+            }
+
+            if (dueDateInput.type === "date") {
+                // Keep the value as is for Gregorian
+            } else {
+                // Convert the date for Ethiopian Calendar
+                dueDateInput.value = convertDateToGC(dueDateInput.value);
+            }
+
+            // Check if the due date is today or later
+            const dueDate = new Date(dueDateInput.value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Set time to midnight for comparison
+
+            console.log("Due Date:", dueDate); // Debugging line
+            console.log("Today's Date:", today); // Debugging line
+
+            if (dueDate < today) {
+                alert("Due date can't be before today");
+                return; // Stop form submission
+            }
+
+            // Use Fetch API to submit form data
+            fetch(createExternalMemoForm.action, {
+                method: 'POST',
+                body: new FormData(createExternalMemoForm),
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'), // Function to get CSRF token
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display the message returned from the server
+                //alert(data.message || "Form submitted successfully");
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+
+    <style>
+        .form-label {
+            font-weight: bold;
+        }
+
+        .form-control {
+            border-radius: 0;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .btn-primary:hover {
+            background-color: #0069d9;
+            border-color: #0062cc;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            border-color: #545b62;
+        }
+
+        /* Adjustments for button alignment */
+        .d-flex.align-items-center .btn {
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+        /* Additional styling for the card */
+        .card {
+            border: 1px solid #e4e4e4;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .card-title {
+            color: #333;
+        }
+
+        .form-check {
+            display: flex;
+            align-items: center; /* Vertically center checkbox and label */
+        }
+
+        .form-check input[type="checkbox"] {
+            width: 20px;  /* Width of the checkbox */
+            height: 20px; /* Height of the checkbox */
+            margin-right: 5px; /* Space between checkbox and label */
+        }
+
+        .form-check-input:checked {
+            background-color: darkgreen;
+        }
+
+        .form-check-input:disabled {
+            opacity: 1;
+            filter: none;
+        }
+
+        input#id_public, input#id_urgent, input#id_to_external, input#id_in_english {
+            border: 1px solid green;
+        }
+
+    </style>
+{% endblock %}

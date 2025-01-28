@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %} Add Document {% endblock %}
+
+{% block content %}
+<style>
+    textarea.form-control {
+    height: auto;
+    width: 500px;
+}
+</style>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    <h2 class="text-center"> Upload Document</h2>
+    <form method="post" enctype="multipart/form-data" id="add_document">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col">
+                <label for="id_title" class="form.label"> Title:<span style="color: red;">*</span></label>
+                {{form.title}}
+            </div>
+            <div class="col">
+                <label for="id_document_number" class="form.label"> Document Number:<span style="color: red;">*</span></label>
+                {{form.document_number}}
+            </div>
+<!--            <div class="col">-->
+<!--                <label for="id_author" class="form.label"> Author:<span style="color: red;">*</span></label>-->
+<!--                {{form.author}}-->
+<!--            </div>-->
+            <div class="col">
+                <label for="id_privacy" class="form.label"> Privacy:<span style="color: red;">*</span></label>
+                {{form.privacy}}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label for="id_file" class="form.label"> File:<span style="color: red;">*</span></label>
+                {{form.file}}
+            </div>
+            <div class="col">
+                <label for="id_content_type" class="form.label"> Owner Type:<span style="color: red;">*</span></label>
+                {{form.content_type}}
+            </div>
+            <div class="col">
+                <label for="id_category" class="form.label"> Category:</label>
+                {{form.category}}
+            </div>
+            <div class="col">
+                <label for="document_date" class="form.label"> Uploaded Date:<span style="color: red;">*</span></label>
+                {{form.uploaded_date}}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label for="description"> Description</label>
+                {{form.description}}
+            </div>
+<!--            <div class="col">-->
+<!--                <label for="description"> Keywords</label>-->
+<!--                {{form.keywords}}-->
+<!--            </div>-->
+        </div>
+        <div class="d-flex justify-content-end gap-3 my-3">
+            <a href="{% url 'index' %}" type="submit" class="btn btn-secondary d-flex-end"> <i class="bi bi-x"></i>Cancel</a>
+            <button type="submit" class="btn btn-success d-flex-end"> <i class="bi bi-cloud-upload mx-2"></i>Upload</button>
+
+        </div>
+    </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set required attributes for mandatory fields
+            document.querySelector('#id_title').setAttribute('required', 'required');
+            document.querySelector('#id_document_number').setAttribute('required', 'required');
+            // document.querySelector('#id_author').setAttribute('required', 'required');
+            document.querySelector('#id_privacy').setAttribute('required', 'required');
+            document.querySelector('#id_file').setAttribute('required', 'required');
+            document.querySelector('#id_document_date').setAttribute('required', 'required');
+
+            // Ensure optional fields are not required
+            document.querySelector('#id_category').removeAttribute('required');
+            document.querySelector('#id_description').removeAttribute('required');
+            // document.querySelector('#id_keywords').removeAttribute('required');
+
+            // Event listener for Send to DMS button
+        });
+    </script>
+{% endblock %}

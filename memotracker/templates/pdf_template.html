@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Memo - {{ memo.reference_number }}</title>
+    <link rel="stylesheet" href="static/css/pdf_styles.css">
+    <style>
+        @page {
+            margin: 0cm;
+        }
+
+        body {
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            font-size: 14px;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+        .header img, .footer img{
+            width: 100%; /* Make the image width equal to the width of its container */
+            height: auto; /* Adjust the height automatically to maintain the aspect ratio */
+        }
+
+        main {
+            margin: 3.2cm 2cm 2cm 2cm;
+        }
+
+        h1,
+        h2,
+        h3,p {
+            margin: 0;
+            padding: 0;
+            line-height: 1.5rem;
+        }
+
+        p {
+            margin: 0;
+            padding: 0;
+            text-align: justify;
+        }
+
+        .right p {
+            text-align: right;
+            margin-bottom: 10px;
+        }
+
+        .subject p {
+            text-align: center;
+            margin: 20px 20px;
+        }
+
+        .content {
+            margin-bottom: 20px;
+        }
+
+        .cc-list {
+            margin-bottom: 20px;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-size: cover;
+            background-position: center bottom;
+            background-repeat: no-repeat;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <img src="data:image/jpeg;base64,{{ header_image }}" alt="Header Image">
+    </div>
+
+    <main>
+        {% if memo.to_external %}
+        <div class="right">
+            <p><strong>{{ referenceNumber }}</strong> {{ memo.reference_number }}</p>
+            <p><strong>{{ date }}</strong> {{ date_str }}</p>
+        </div>
+        {% else %}
+        <div class="right">
+            <p><strong>{{ date }}</strong> {{ date_str }}</p>
+        </div>
+        {% endif %}
+
+        {% if not memo.to_external %}
+        <div class="from">
+            <p><strong>{{ from_field }}</strong> {{ business_unit_created_by }}</p>
+        </div>
+        {% endif %}
+
+        <div class="recipient">
+            <p>
+                <strong>{{ to }}</strong>
+                {% if direct_list|length > 1 %}
+                    <ul>
+                    {% for direct in direct_list %}
+                        <li>{{ direct }}</li>
+                    {% endfor %}
+                    </ul>
+                {% else %}
+                    {{ direct_list|first }}
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="subject center">
+            <p><strong>{{ subject }}</strong> <strong style="text-decoration: underline;">{{ memo.subject }}</strong></p>
+        </div>
+
+        <div class="content">
+            {% for paragraph in memo_content %}
+            <p>{{ paragraph|safe }}</p>
+            {% endfor %}
+        </div>
+
+        {% if cc_list %}
+        <div class="cc-list">
+            <p>
+                <strong style="text-decoration: underline;">{{ cc }}</strong>
+            </p>
+            <ul>
+                {% for cc_item in cc_list %}
+                <li>{{ cc_item }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+       <div>
+            {% if source_signature %}
+                <div class="source-signature" style="text-align: right; margin: 20px 0;">
+                    <img src="data:image/png;base64,{{ source_signature }}" alt="{{ source_bu.name_en }}" style="width: 100px; height: auto;">
+                </div>
+            {% else %}
+                <div class="right">
+                    <p>No signature available for {{ source_bu.name_en }}.</p>
+                </div>
+            {% endif %}
+       </div>
+
+    </main>
+    <footer class="footer">
+        <img src="data:image/jpeg;base64,{{ footer_image }}" alt="Footer Image">
+    </footer>
+</body>
+
+</html>

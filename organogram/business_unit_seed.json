@@ -1,0 +1,375 @@
+[
+    {
+      "_command":  "python manage.py loaddata organogram/business_unit_seed.json",
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 1,
+        "code": "CEO",
+        "name_am": "ዋና ስራ አስፈፃሚ",
+        "name_en": "Chief Executive Officer",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": null
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 2,
+        "code": "CA",
+        "name_am": "የኮርፖሬት ኦዲት መምሪያ",
+        "name_en": "Corporate Audit Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 1
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 3,
+        "code": "EAC",
+        "name_am": "የስነ ምግባርና ፀረ ሙስና መምሪያ",
+        "name_en": "Ethics and Anti-Corruption Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 1
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 4,
+        "code": "CEOO",
+        "name_am": "የዋና ስራ አስፈፃሚ ፅ/ቤት",
+        "name_en": "Office of the Chief Executive Officer",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 1
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 9,
+        "code": "LS",
+        "name_am": "የህግ አገልግሎት መምሪያ",
+        "name_en": "Legal Services Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 4
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 10,
+        "code": "ICT",
+        "name_am": "ኢንፎርሜሽን ኮምዮኒኬሽን እና ቴክኖሎጂ መምሪያ",
+        "name_en": "Information Communication and Technology Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 4
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 11,
+        "code": "GSR",
+        "name_am": "የስርዓተ ፆታና ማህበራዊ ሀላፊነት መምሪያ",
+        "name_en": "Gender and Social Responsibility Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 4
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 12,
+        "code": "SPI",
+        "name_am": "የስትራቴጂክ እቅድና የአፈፃፀም ስራ አመራር መምሪያ",
+        "name_en": "Strategic Planning and Implementation Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 4
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 13,
+        "code": "CC",
+        "name_am": "ኮርፖሬት ኮምዩኒኬሽን መምሪያ",
+        "name_en": "Corporate Communication Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 4
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 14,
+        "code": "RCOA",
+        "name_am": "የአደጋ ስጋት አመራር ፣ ተስማሚነትና የጥራት ማረጋገጫ መምሪያ",
+        "name_en": "Risk Management, Compliance and Quality Assurance Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 4
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 5,
+        "code": "CRM",
+        "name_am": "ኮርፖሬት ሀብት አስተዳደር ዘርፍ",
+        "name_en": "Corporate Resource Management Sector",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 1
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 15,
+        "code": "HRC",
+        "name_am": "የሰው ሀብት ካፒታል መምሪያ",
+        "name_en": "Human Resource Capital Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 5
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 16,
+        "code": "FIN",
+        "name_am": "ፋይናንስ መምሪያ",
+        "name_en": "Finance Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 5
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 17,
+        "code": "BPC",
+        "name_am": "በጀት ዝግጅትና ቁጥጥር ቡድን",
+        "name_en": "Budget Preparation and Control Team",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 5
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 18,
+        "code": "PSM",
+        "name_am": "የግዥ እና አቅርቦት ማኔጅመንት መምሪያ",
+        "name_en": "Procurement and Supply Management Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 5
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 19,
+        "code": "PMGS",
+        "name_am": "ንብረት አስተዳደር እና ጠቅላላ አገልግሎት መምሪያ",
+        "name_en": "Property Management and General Services Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 5
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 20,
+        "code": "RAS",
+        "name_am": "ሪከርድና ማህደር አገልግሎት",
+        "name_en": "Record and Archive Service",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 5
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 6,
+        "code": "LI",
+        "name_am": "መሬትና መሰረተ ልማት ዘርፍ",
+        "name_en": "Land and Infrastructure Sector",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 1
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 21,
+        "code": "MPLB",
+        "name_am": "ማስተር ፕላንና መሬት ባንክ አስተዳደር መምሪያ",
+        "name_en": "Master Plan and Land Bank Management Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 6
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 22,
+        "code": "DM",
+        "name_am": "የዲዛይን ማኔጅመንት መምሪያ",
+        "name_en": "Design Management Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 6
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 23,
+        "code": "CM",
+        "name_am": "የግንባታ ማኔጅመንት መምሪያ",
+        "name_en": "Construction Management Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 6
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 24,
+        "code": "CSCA",
+        "name_am": "የግንባታ ሱፕርቪዥንና ኮንትራት አስተዳደር መምሪያ",
+        "name_en": "Construction Supervision and Contract Administration Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 6
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 7,
+        "code": "OM",
+        "name_am": "ኦፕሬሽንና ማኔጅመንት ዘርፍ",
+        "name_en": "Operations and Management Sector",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 1
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 25,
+        "code": "IAS",
+        "name_am": "የባለሀብቶች ድጋፍና ክትትል መምሪያ",
+        "name_en": "Investor Aftercare and Supervision Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 7
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 26,
+        "code": "EHSA",
+        "name_am": "አካባቢያዊ ፣ ጤና እና ማህበራዊ ጉዳዮች መምሪያ",
+        "name_en": "Environmental, Health and Social Affairs Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 7
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 27,
+        "code": "ISM",
+        "name_am": "መሰረተ ልማት እና አገልግሎቶች ማኔጅመንት መምሪያ",
+        "name_en": "Infrastructure and Services Management Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 7
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 28,
+        "code": "SS",
+        "name_am": "ጥበቃና ደህንነት መምሪያ",
+        "name_en": "Safety and Security Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 7
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 8,
+        "code": "IPM",
+        "name_am": "ኢንቨስትመንት ፕሮሞሽንና ማርኬቲንግ ዘርፍ",
+        "name_en": "Investment Promotion and Marketing Sector",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 1
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 29,
+        "code": "IPIR",
+        "name_am": "ኢንቨስትመንት ፕሮሞሽንና የባለሀብቶች ግንኙነት መምሪያ",
+        "name_en": "Investment Promotion and Investor Relations Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 8
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 30,
+        "code": "MB",
+        "name_am": "ማርኬቲንግና ብራንዲንግ መምሪያ",
+        "name_en": "Marketing and Branding Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 8
+      }
+    },
+    {
+      "model": "organogram.businessunit",
+      "fields": {
+        "id": 31,
+        "code": "BD",
+        "name_am": "ቢዝነስ ልማት መምሪያ",
+        "name_en": "Business Development Department",
+        "location": "Head Quarter",
+        "contact": "+251118722266",
+        "parent_id": 8
+      }
+    }
+  ]

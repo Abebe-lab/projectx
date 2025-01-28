@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %} Update Document {% endblock %}
+{% block contentIcon %}
+    bi bi-pencil
+{% endblock %}
+{% block contentTitle %}
+    Update Document
+{% endblock %}
+
+{% block content %}
+    <form method="post" enctype="multipart/form-data" id="update-document-form">
+        {% csrf_token %}
+
+        <div class="row">
+            <div class="col">
+                <label for="id_title" class="form.label"> <strong>Title:</strong></label>
+                {{form.title}}
+            </div>
+            <div class="col">
+                <label for="id_document_number" class="form.label"> <strong>Document Number:</strong></label>
+                {{form.document_number}}
+            </div>
+<!--            <div class="col">-->
+<!--                <label for="id_author" class="form.label"> <strong>Author:</strong></label>-->
+<!--                {{form.author}}-->
+<!--            </div>-->
+            <div class="col">
+                <label for="id_privacy" class="form.label"> <strong>Privacy:</strong></label>
+                {{form.privacy}}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label for="id_content_type" class="form.label"> <strong>Owner Type:</strong></label>
+                {{form.content_type}}
+            </div>
+            <div class="col">
+                <label for="id_category" class="form.label"> <strong>Category:</strong></label>
+                {{form.category}}
+            </div>
+            <div class="col">
+                <label for="document_date" class="form.label"> <strong>Uploaded Date:</strong></label>
+                {{form.uploaded_date}}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label for="description"> <strong>Description</strong></label>
+                {{form.description}}
+            </div>
+<!--            <div class="col">-->
+<!--                <label for="keywords"> <strong>Keywords</strong></label>-->
+<!--                {{form.keywords}}-->
+<!--            </div>-->
+        </div>
+        <div class="row class=my-3">
+            <div class="col">
+                <div class="col">
+                    <label for="id_file" class="form.label"> <strong>File:</strong></label>
+                    {{form.file}}
+                </div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-end gap-3 my-3">
+            <a href="{% url 'index' %}" class="btn btn-secondary d-flex-end"> <i class="bi bi-x"></i>Cancel</a>
+            <button type="submit" class="btn btn-success d-flex-end"> <i class="bi bi-cloud-upload mx-2"></i>Update</button>
+        </div>
+    </form>
+
+    <script>
+        document.getElementById('update-document-form').onsubmit = function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}', // Include CSRF token
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Document updated successfully!');
+                    window.location.href = "{% url 'index' %}";
+                } else {
+                    alert('Document not updated. No changes were made.');
+                    window.location.href = "{% url 'document_update' pk=pk %}";
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        };
+    </script>
+{% endblock %}

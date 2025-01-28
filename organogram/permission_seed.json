@@ -1,0 +1,184 @@
+[
+  {
+    "_command":  "python manage.py loaddata organogram/permission_seed.json",
+    "model": "organogram.permissionparent",
+    "fields": {
+      "id": 1,
+      "code": "MTS",
+      "name": "Memo Tracking System"
+    }
+  },
+  {
+    "model": "organogram.permissionparent",
+    "fields": {
+      "id": 2,
+      "code": "DMS",
+      "name": "Document Management System"
+    }
+  },
+  {
+    "model": "organogram.permissionparent",
+    "fields": {
+      "id": 4,
+      "code": "rpt",
+      "name": "Reports"
+    }
+  },
+  {
+    "model": "organogram.permission",
+    "fields": {
+      "id": 1,
+      "name": "create_memo",
+      "description": "",
+      "display_name": "Create Memo",
+      "icon": "bi-envelope-plus-fill",
+      "url": "memotracker/create_memo",
+      "parent": 1,
+      "order": 1
+    }
+  },
+  {
+    "model": "organogram.permission",
+    "fields": {
+      "id": 2,
+      "name": "draft",
+      "description": "",
+      "display_name": "Draft Memo",
+      "icon": "bi-file-earmark",
+      "url": "memotracker/draft_memo_list",
+      "parent": 1,
+      "order": 2
+    }
+  },
+  {
+    "model": "organogram.permission",
+    "fields": {
+      "id": 3,
+      "name": "outgoing_memo",
+      "description": "",
+      "display_name": "Outgoing Memo",
+      "icon": "bi-send-fill",
+      "url": "memotracker/outgoing_memo_list",
+      "parent": 1,
+      "order": 3
+    }
+  },
+  {
+    "model": "organogram.permission",
+    "fields": {
+      "id": 4,
+      "name": "incoming_memo",
+      "description": "",
+      "display_name": "Incoming Memo",
+      "icon": "bi-inbox-fill",
+      "url": "memotracker/incoming_memo_list",
+      "parent": 1,
+      "order": 5
+    }
+  },
+  {
+    "model": "organogram.permission",
+    "fields": {
+      "id": 6,
+      "name": "external",
+      "description": "",
+      "display_name": "External Letter",
+      "icon": "bi-upc-scan",
+      "url": "memotracker/external_memo_list",
+      "parent": 1,
+      "order": 6
+    }
+  },
+  {
+    "model": "organogram.permission",
+    "fields": {
+      "id": 7,
+      "name": "my_files",
+      "description": "",
+      "display_name": "My Files",
+      "icon": "bi-files",
+      "url": "dms",
+      "parent": 2,
+      "order": 1
+    }
+  },
+  {
+    "model": "organogram.permission",
+    "fields": {
+      "id": 8,
+      "name": "memo_to_dms",
+      "description": "",
+      "display_name": "Memos in DMS",
+      "icon": "bi-card-list",
+      "url": "dms/list_in_dms",
+      "parent": 2,
+      "order": 2
+    }
+  },
+  {
+    "model": "organogram.permission",
+    "fields": {
+      "id": 5,
+      "name": "personal",
+      "description": "",
+      "display_name": "Personal Memo",
+      "icon": "bi-file-person-fill",
+      "url": "memotracker/personal_memo_list",
+      "parent": 4,
+      "order": 1
+    }
+  },
+
+  {
+    "model": "organogram.permission",
+    "fields": {
+      "id": 10,
+      "name": "approved",
+      "description": "",
+      "display_name": "Approved Memo",
+      "icon": "bi-check2-circle",
+      "url": "memotracker/approved_memo_list",
+      "parent": 4,
+      "order": 2
+    }
+  },
+  {
+    "model": "organogram.permission",
+    "fields": {
+      "id": 11,
+      "name": "sent",
+      "description": "",
+      "display_name": "Sent Memo",
+      "icon": "bi-send-check-fill",
+      "url": "memotracker/sent_memo_list",
+      "parent": 4,
+      "order": 3
+    }
+  },
+  {
+    "model": "organogram.permission",
+    "fields": {
+      "id": 12,
+      "name": "closed",
+      "description": "",
+      "display_name": "Closed Memo",
+      "icon": "bi-file-zip-fill",
+      "url": "memotracker/closed_memo_list",
+      "parent": 4,
+      "order": 4
+    }
+  },
+  {
+    "model": "organogram.permission",
+    "fields": {
+      "id": 9,
+      "name": "external_customer",
+      "description": "",
+      "display_name": "External Customer",
+      "icon": "bi-building-gear",
+      "url": "organogram/customer",
+      "parent": 4,
+      "order": 5
+    }
+  }
+]

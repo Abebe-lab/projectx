@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% block title %} Reset PIN {% endblock %}
+{% block contentIcon %}
+    bi bi-passport
+{% endblock %}
+{% block contentTitle %}
+    Reset PIN
+{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif; /* Set a default font */
+    }
+
+    .login {
+        height: 100vh;
+        width: 110%;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center; /* Center the content vertically */
+    }
+
+    .login_box {
+        width: 30%;
+        height: auto;
+        position: absolute;
+        top: 30%; /* Center vertically */
+        left: 40%;
+        transform: translate(-50%, -50%);
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 2px 6px 11px 15px #4f5b5394;
+        display: flex;
+        flex-direction: column;
+        padding: 20px; /* Increased padding for better spacing */
+    }
+
+    .left h1 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #3a6120; /* Darker heading color */
+        font-size: 28px; /* Increased font size */
+    }
+
+    .left label {
+        margin-bottom: 5px; /* Space between label and input */
+        font-weight: bold; /* Bold labels */
+    }
+
+    .left input {
+        border: none;
+        width: 100%; /* Full width */
+        border-bottom: 1px solid #0d58097d;
+        padding: 10px;
+        background: transparent;
+        font-weight: 400;
+        font-size: 16px; /* Increased font size */
+        margin-bottom: 20px; /* Space between inputs */
+        outline: none; /* Remove default outline */
+        box-sizing: border-box;
+    }
+
+    .left input:focus {
+        border-bottom: 2px solid #3a6120; /* Thicker border on focus */
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        width: 120px;
+        border: none;
+        color: #fff;
+        font-weight: bold;
+        border-radius: 10px;
+        padding: 10px 15px;
+        margin-top: 10px;
+        cursor: pointer;
+        box-sizing: border-box;
+    }
+
+    .btn-primary {
+        background: #28a745; /* Primary button color */
+    }
+
+    .btn-secondary {
+        background: #6c757d; /* Secondary button color */
+    }
+
+    .alert-danger {
+        color: red;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    #form_actions {
+        display: flex;
+        justify-content: center;
+        gap: 15px; /* More space between buttons */
+    }
+</style>
+
+<section class="login">
+    <div class="login_box">
+        <div class="left">
+            <h1>Reset PIN</h1>
+
+            <form id="reset-pin-form" method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <input type="password" class="form-control" id="new_pin" name="new_pin" placeholder="New PIN" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" class="form-control" id="confirm_pin" name="confirm_pin" placeholder="Confirm New PIN" required>
+                </div>
+
+                <div id="form_actions">
+                    <button type="submit" class="btn btn-primary">Reset PIN</button>
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='{% url 'forgot_pin' %}'">Cancel</button>
+                </div>
+            </form>
+
+            <script>
+                document.getElementById('reset-pin-form').onsubmit = function(event) {
+                    event.preventDefault(); // Prevent the default form submission
+
+                    const formData = new FormData(this);
+
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}', // Include CSRF token
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Your PIN has been reset successfully!');
+                            window.location.href = "{% url 'dashboard' %}"; // Redirect to dashboard
+                        } else {
+                            alert(data.message || 'An error occurred. Please try again.');
+                            if (data.clear_pin) {
+                                document.getElementById('new_pin').value = ''; // Clear new PIN input
+                                document.getElementById('confirm_pin').value = ''; // Clear confirm PIN input
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                };
+            </script>
+        </div>
+    </div>
+</section>
+{% endblock %}
