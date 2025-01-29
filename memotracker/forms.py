@@ -32,7 +32,7 @@ class MemoForm(forms.ModelForm):
         self.fields["document"].choices = [
             (document.pk, document.title) for document in Document.objects.all()
         ]
-        self.fields["permission"].choices = [('read', 'Read'),('share', 'Share'),]
+        self.fields["permission"].choices = [('read', 'Read'), ('share', 'Share'),]
          # Add Bootstrap classes to the form fields
         for field_name, field in self.fields.items():
             if(field_name == 'urgent' or field_name == 'public' or field_name == 'to_external' or field_name == 'in_english'):
