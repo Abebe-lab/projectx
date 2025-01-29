@@ -2197,17 +2197,17 @@ def update_attached_memos(request):
 
 
 # This function returns memos that are either written by the current user or sent to the current user
-# def get_available_memos(user):
-#     memos = MemoRoute.objects.raw('''
-#         SELECT * FROM memotracker_memoroute
-#         WHERE id IN (
-#             SELECT MIN(id)
-#             FROM memotracker_memoroute
-#             WHERE from_user_id = %s OR to_user_id = %s
-#             GROUP BY memo_id
-#         )
-#     ''', [user.id, user.id])
-#     return memos
+def get_available_memos(user):
+    memos = MemoRoute.objects.raw('''
+        SELECT * FROM memotracker_memoroute
+        WHERE id IN (
+            SELECT MIN(id)
+            FROM memotracker_memoroute
+            WHERE from_user_id = %s OR to_user_id = %s
+            GROUP BY memo_id
+        )
+    ''', [user.id, user.id])
+    return memos
 
 
 def get_available_memos(user):
