@@ -869,7 +869,9 @@ def create_memo(request):
     if request.method == 'POST':
         attachments = request.POST.get('attachments')
         attachment_ids = attachments.split(',')  # Split attachment IDs into a list
-        form = MemoForm(request.POST, user_id=user_role.user.id, bunit_id=user_role.business_unit.id)
+        # form = MemoForm(request.POST, user_id=user_role.user.id, bunit_id=user_role.business_unit.id)
+        form = MemoForm(request.POST, user=request.user, bunit_id=bu.id)  # Pass the current user and business unit ID
+
         message = ""
 
         if form.is_valid():
@@ -959,7 +961,9 @@ def create_memo(request):
                     message += f"Error in field '{field}': {error}"
         return JsonResponse({'message': message})
     else:
-        form = MemoForm(user_id=user_role.user.id, bunit_id=user_role.business_unit.id)
+        # form = MemoForm(user_id=user_role.user.id, bunit_id=user_role.business_unit.id)
+        form = MemoForm(user=request.user, bunit_id=bu.id)  # Pass the current user and business unit ID
+
     # ethDate = ethiopianDateFormatter(datetime.today())
 
     return render(request, 'memotracker/create_memo.html', {
@@ -975,6 +979,142 @@ def create_memo(request):
 
     })
 
+# def create_memo(request):
+#     user_role = UserRole.objects.get(user=request.user, active=True)  # Get the user's role
+#     bu = user_role.business_unit
+#     dept_users = User.objects.filter(userrole__business_unit=bu).exclude(id=request.user.id)
+#
+#     last_bu_ref_number = bu.last_memo_ref_number
+#     last_ref_number = f'IPDC/{bu.code}/{last_bu_ref_number}/{str(date.today().year)}'
+#
+#     profile = Profile.objects.get(user=request.user)
+#     last_personal_memo_ref_number = f'P{request.user.id}/{profile.last_personal_memo_ref_number}/{str(date.today().year)}'
+#
+#     # Get the available memos for the current user
+#     available_memos = get_available_memos(request.user)
+#
+#     # Initialize manager and delegate variables
+#     manager = user_role.role.is_manager
+#     delegate = user_role.deligated
+#
+#     if request.method == 'POST':
+#         attachments = request.POST.get('attachments')
+#         attachment_ids = attachments.split(',') if attachments else []  # Split attachment IDs into a list
+#         form = MemoForm(request.POST, request.FILES, user=request.user,
+#                         bunit_id=bu.id)  # Pass the current user and business unit ID
+#
+#         message = ""
+#
+#         if form.is_valid():
+#             memo = form.save(commit=False)
+#             memo.created_by = user_role.user
+#             memo.keywords = str('')
+#
+#             linked_memos = request.POST.getlist('memo_ids')  # Get the linked memos from the form
+#
+#             content_type_str = str(form.cleaned_data['content_type'])
+#             app_label, model_name = content_type_str.split(' | ')
+#
+#             # Determine the non-form field value based on the owner type
+#             object_id = user_role.user.id if model_name == 'user' else user_role.business_unit.id
+#             memo.object_id = object_id
+#
+#             if not manager and not delegate:
+#                 document_file = form.cleaned_data.get('document')
+#                 if document_file:
+#                     document = Document.objects.create(
+#                         title=document_file.name,
+#                         uploaded_by=request.user,
+#                         file=document_file
+#                     )
+#                     memo.document = document  # Link the uploaded document to the memo
+#
+#             # Handle save draft action
+#             if 'save_draft' in request.POST:
+#                 memo.status = 'draft'  # Set the status to 'draft'
+#                 memo.reference_number = f"{memo.reference_number}-{str(datetime.today().time().hour)}:{str(datetime.today().time().minute)}:{str(datetime.today().time().second)}"
+#
+#                 memo.memo_date = datetime.today()
+#                 memo.save()
+#
+#                 # Handle memo attachments
+#                 if attachment_ids and attachment_ids[0] != '':
+#                     create_memo_attachments(memo, attachment_ids)
+#
+#                 # Link memos if any
+#                 if linked_memos:
+#                     link_memo_attachments(memo, linked_memos)
+#
+#                 return redirect('draft_memo_list')  # Redirect to the memo list view
+#
+#             # Handle send memo action
+#             elif 'send_memo' in request.POST:
+#                 try:
+#                     if memo.content_type != ContentType.objects.get(model='user'):
+#                         bu.last_memo_ref_number += 1
+#                         bu.save()
+#
+#                     if memo.content_type == ContentType.objects.get(model='user'):
+#                         profile.last_personal_memo_ref_number += 1
+#                         profile.save()
+#
+#                     memo.status = 'sent'
+#                     memo.save()
+#
+#                     # Handle memo attachments
+#                     if attachment_ids and attachment_ids[0] != '':
+#                         create_memo_attachments(memo, attachment_ids)
+#
+#                     # Link memos if any
+#                     if linked_memos:
+#                         link_memo_attachments(memo, linked_memos)
+#
+#                     message = save_memo_route(request, memo)
+#                 except Exception as e:
+#                     message = f"Memo Saving Failed: {str(e)}"
+#
+#             # Handle approval send action
+#             elif 'approval_send' in request.POST:
+#                 try:
+#                     memo.status = 'draft'  # Set the status to 'draft'
+#                     memo.reference_number = f"{memo.reference_number}-{str(datetime.today().time().hour)}:{str(datetime.today().time().minute)}:{str(datetime.today().time().second)}"
+#                     memo.save()
+#
+#                     # Handle memo attachments
+#                     if attachment_ids and attachment_ids[0] != '':
+#                         create_memo_attachments(memo, attachment_ids)
+#
+#                     # Link memos if any
+#                     if linked_memos:
+#                         link_memo_attachments(memo, linked_memos)
+#
+#                     message = save_approval_route(request, memo)
+#                 except Exception as e:
+#                     message = f"Memo Saving Failed: {str(e)}"
+#
+#         else:
+#             print('Failed to save memo')
+#             for field, errors in form.errors.items():
+#                 for error in errors:
+#                     message += f"Error in field '{field}': {error}"
+#
+#         return JsonResponse({'message': message})
+#
+#     else:
+#         form = MemoForm(user=request.user, bunit_id=bu.id)  # Pass the current user and business unit ID
+#
+#     return render(request, 'memotracker/create_memo.html', {
+#         'form': form,
+#         'memo_type': user_role,
+#         'last_ref_number': last_ref_number,
+#         'last_personal_memo_ref_number': last_personal_memo_ref_number,
+#         'user_id': user_role.user.id,
+#         'bunit_code': bu.code,
+#         'available_memos': available_memos,
+#         'dept_users': dept_users,
+#         'manager': manager,
+#         'delegate': delegate,
+#     })
 @login_required
 def external_memo(request):
     user_role = UserRole.objects.get(user=request.user, active=True)

@@ -10,45 +10,94 @@ from django.contrib.auth.models import User
 from organogram.models import UserRole, ExternalCustomer, BusinessUnit
 
 
+
+
+
 class MemoSearchForm(forms.Form):
     subject = forms.CharField(max_length=300)
     memo_date = forms.DateTimeField()
 
+# class MemoForm(forms.ModelForm):
+#     content = forms.CharField(widget=CKEditorWidget(attrs={'id': 'memoContent'}))
+#     memo_date=forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+#     due_date=forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}))
+#     document = ChoiceField(choices=[], required=False)
+#     permission = ChoiceField(choices=[], required=False)
+#     class Meta:
+#         model = Memo
+#         exclude = ['object_id', 'created_by', 'keywords', 'status']
+#
+#     def __init__(self, *args, **kwargs):
+#         self.user_id = kwargs.pop('user_id', None)
+#         self.bunit_id = kwargs.pop('bunit_id', None)
+#         self.org_list = kwargs.pop('org_list', None)
+#         super(MemoForm, self).__init__(*args, **kwargs)
+#         self.fields["document"].choices = [
+#             (document.pk, document.title) for document in Document.objects.all()
+#
+#
+#         ]
+#         self.fields["permission"].choices = [('read', 'Read'), ('share', 'Share'),]
+#          # Add Bootstrap classes to the form fields
+#         for field_name, field in self.fields.items():
+#             if(field_name == 'urgent' or field_name == 'public' or field_name == 'to_external' or field_name == 'in_english'):
+#                 field.widget.attrs['class'] = 'form-check-input'
+#             elif(field_name == 'content_type' or field_name == 'assigned_to'):
+#                 field.widget.attrs['class'] = 'form-select'
+#             else:
+#                 field.widget.attrs['class'] = 'form-control'
+#
+#             if(field_name=='assigned_to'):
+#                 field.empty_label="--- Select staff ---"
+#                 field.queryset = User.objects.filter(userrole__business_unit_id=self.bunit_id).exclude(userrole__user_id=self.user_id)
+#             if(field_name=='content_type'):
+#                 field.empty_label = None
+###########################
+
 class MemoForm(forms.ModelForm):
     content = forms.CharField(widget=CKEditorWidget(attrs={'id': 'memoContent'}))
-    memo_date=forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
-    due_date=forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}))
-    document = ChoiceField(choices=[], required=False)
-    permission = ChoiceField(choices=[], required=False)
+    memo_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+    due_date = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}))
+    document = forms.ChoiceField(choices=[], required=False)
+    permission = forms.ChoiceField(choices=[], required=False)
+
     class Meta:
         model = Memo
         exclude = ['object_id', 'created_by', 'keywords', 'status']
 
     def __init__(self, *args, **kwargs):
-        self.user_id = kwargs.pop('user_id', None)
+        # Extract the user and other necessary arguments from kwargs
+        self.user = kwargs.pop('user', None)  # Get the user from kwargs
         self.bunit_id = kwargs.pop('bunit_id', None)
-        self.org_list = kwargs.pop('org_list', None)
-        super(MemoForm, self).__init__(*args, **kwargs)
-        self.fields["document"].choices = [
-            (document.pk, document.title) for document in Document.objects.all()
-        ]
-        self.fields["permission"].choices = [('read', 'Read'), ('share', 'Share'),]
-         # Add Bootstrap classes to the form fields
+        self.org_list = kwargs.pop('org_list', None, )  # Optional; ensure this is handled correctly
+        super(MemoForm, self).__init__(*args, **kwargs)  # Pass remaining args to the parent class
+
+        # Filter documents uploaded by the current user
+        if self.user:
+            self.fields["document"].choices = [
+                (document.pk, document.title) for document in Document.objects.filter(uploaded_by=self.user)
+            ]
+        else:
+            self.fields["document"].choices = []
+
+        self.fields["permission"].choices = [('read', 'Read'), ('share', 'Share')]
+
+        # Add Bootstrap classes to the form fields
         for field_name, field in self.fields.items():
-            if(field_name == 'urgent' or field_name == 'public' or field_name == 'to_external' or field_name == 'in_english'):
+            if field_name in ['urgent', 'public', 'to_external', 'in_english']:
                 field.widget.attrs['class'] = 'form-check-input'
-            elif(field_name == 'content_type' or field_name == 'assigned_to'):
+            elif field_name in ['content_type', 'assigned_to']:
                 field.widget.attrs['class'] = 'form-select'
             else:
                 field.widget.attrs['class'] = 'form-control'
-            
-            if(field_name=='assigned_to'):
-                field.empty_label="--- Select staff ---"
-                field.queryset = User.objects.filter(userrole__business_unit_id=self.bunit_id).exclude(userrole__user_id=self.user_id)
-            if(field_name=='content_type'):
-                field.empty_label = None
-                
 
+            if field_name == 'assigned_to':
+                field.empty_label = "--- Select staff ---"
+                field.queryset = User.objects.filter(userrole__business_unit=self.bunit_id).exclude(
+                    userrole__user_id=self.user.id)
+            if field_name == 'content_type':
+                field.empty_label = None
+############################
     def save(self, commit=True):
         if commit:
             content_type_str = str(self.cleaned_data['content_type'])
