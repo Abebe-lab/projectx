@@ -126,10 +126,18 @@
 {#                    <button class="btn btn-primary" type="submit">Send</button>#}
 {#                    <a class="btn btn-dark" href="#">Cancel</a>#}
 
-                    <div class="d-flex justify-content-end gap-3 my-3" id="routingFormBtns">
+<!--                    <div class="d-flex justify-content-end gap-3 my-3" id="routingFormBtns">-->
 
-                        <a id="memoRouteCancel" type="submit" class="btn btn-secondary d-flex-end"> <i class="bi bi-x mx-2"></i>Cancel</a>
-                        <button type="submit" class="btn btn-success d-flex-end"> <i class="bi bi-send mx-2"></i>Send</button>
+<!--                        <a id="memoRouteCancel" type="submit" class="btn btn-secondary d-flex-end"> <i class="bi bi-x mx-2"></i>Cancel</a>-->
+<!--                        <button type="submit" class="btn btn-success d-flex-end"> <i class="bi bi-send mx-2"></i>Send</button>-->
+<!--                    </div>-->
+                    <div class="d-flex justify-content-end gap-3 my-3" id="routingFormBtns">
+                        <a id="memoRouteCancel" type="button" class="btn btn-secondary d-flex-end">
+                            <i class="bi bi-x mx-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success d-flex-end" id="sendButton">
+                            <i class="bi bi-send mx-2"></i>Send
+                        </button>
                     </div>
 
                 </form>
@@ -184,35 +192,4 @@
         </div>
     </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const sendButton = document.getElementById('sendButton');
-
-        // Initially disable the Send button
-        sendButton.disabled = true;
-
-        function updateSendButtonState() {
-            // Get references to the select fields
-            const externalSelect = document.getElementById('routingExternal');
-            const businessUnitSelect = document.getElementById('routingBU');
-            const userSelect = document.getElementById('routingToUser');
-
-            // Check if any options are selected
-            const isExternalSelected = externalSelect.selectedOptions.length > 0;
-            const isBusinessUnitSelected = businessUnitSelect.selectedOptions.length > 0;
-            const isUserSelected = userSelect.selectedOptions.length > 0;
-
-            // Enable the Send button if any selection is made
-            sendButton.disabled = !(isExternalSelected || isBusinessUnitSelected || isUserSelected);
-        }
-
-        // Add event listeners to the select fields to check their values on change
-        externalSelect.addEventListener('change', updateSendButtonState);
-        businessUnitSelect.addEventListener('change', updateSendButtonState);
-        userSelect.addEventListener('change', updateSendButtonState);
-
-        // Initial check on page load
-        updateSendButtonState();
-    });
-</script>
 {% endblock %}
