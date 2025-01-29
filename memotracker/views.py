@@ -2213,10 +2213,8 @@ def update_attached_memos(request):
 def get_available_memos(user):
     memos = MemoRoute.objects.filter(
         Q(from_user=user) | Q(to_user=user)
-    ).distinct('memo')  # Assuming you want unique memos based on the foreign key
+    ).distinct('memo_id')  # Assuming you want unique memos based on the foreign key
     return memos
-
-
 
 @login_required
 def generate_report(request, memo_id, format):
