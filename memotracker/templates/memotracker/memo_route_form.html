@@ -183,36 +183,4 @@
             </div>
         </div>
     </div>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const businessUnit = document.querySelector('#id_business_unit'); // Adjust if necessary
-    const businessUnit2 = document.querySelector('#id_business_unit2'); // Adjust if necessary
-    const toUser = document.querySelector('#id_to_user'); // Adjust if necessary
-    const memoAction = document.querySelector('#id_memo_action'); // Adjust if necessary
-    const sendButton = document.getElementById('sendButton');
-
-    // Initially disable the Send button
-    sendButton.setAttribute('disabled', 'false');
-
-    function updateSendButtonState() {
-        const isBusinessUnitSelected = businessUnit.value !== '';
-        const isBusinessUnit2Selected = businessUnit2.value !== '';
-        const isToUserSelected = toUser.value !== '';
-        const isMemoActionSelected = memoAction.value !== '';
-
-        // Enable the Send button if any selection is made
-        if (isBusinessUnitSelected || isBusinessUnit2Selected || isToUserSelected || isMemoActionSelected) {
-            sendButton.removeAttribute('disabled');
-        } else {
-            sendButton.setAttribute('disabled', 'true');
-        }
-    }
-
-    // Add event listeners to dropdowns to check for changes
-    businessUnit.addEventListener('change', updateSendButtonState);
-    businessUnit2.addEventListener('change', updateSendButtonState);
-    toUser.addEventListener('change', updateSendButtonState);
-    memoAction.addEventListener('change', updateSendButtonState);
-});
-</script>
 {% endblock %}
