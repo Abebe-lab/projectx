@@ -53,7 +53,6 @@ class MemoSearchForm(forms.Form):
 #             if(field_name=='content_type'):
 #                 field.empty_label = None
 ###########################
-
 class MemoForm(forms.ModelForm):
     content = forms.CharField(widget=CKEditorWidget(attrs={'id': 'memoContent'}))
     memo_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
@@ -65,12 +64,12 @@ class MemoForm(forms.ModelForm):
         model = Memo
         exclude = ['object_id', 'created_by', 'keywords', 'status']
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # Fix the method name here
         # Extract the user and other necessary arguments from kwargs
         self.user = kwargs.pop('user', None)  # Get the user from kwargs
         self.bunit_id = kwargs.pop('bunit_id', None)
-        self.org_list = kwargs.pop('org_list', None, )  # Optional; ensure this is handled correctly
-        super(MemoForm, self).__init__(*args, **kwargs)  # Pass remaining args to the parent class
+        self.org_list = kwargs.pop('org_list', None)  # Optional; ensure this is handled correctly
+        super(MemoForm, self).__init__(*args, **kwargs)  # Correct superclass call
 
         # Filter documents uploaded by the current user
         if self.user:
