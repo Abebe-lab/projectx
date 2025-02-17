@@ -120,17 +120,15 @@
                     {{ form.is_to_external }}
                     {{ form.from_user }}
                     {{ form.to_user_list }}
-{#                    {{ form.as_p }}   #}
-                    <div class="d-flex justify-content-end text-secondary" id="comment_character_counter"></div>
-
-{#                    <button class="btn btn-primary" type="submit">Send</button>   #}
-{#                    <a class="btn btn-dark" href="#">Cancel</a>   #}
 
                     <div class="d-flex justify-content-end gap-3 my-3" id="routingFormBtns">
 
                         <a id="memoRouteCancel" type="submit" class="btn btn-secondary d-flex-end"> <i class="bi bi-x mx-2"></i>Cancel</a>
 
-                        <button type="submit" class="btn btn-success d-flex-end"> <i class="bi bi-send mx-2"></i>Send</button>
+<!--                        <button type="submit" class="btn btn-success d-flex-end"> <i class="bi bi-send mx-2"></i>Send</button>-->
+                        <button type="submit" id="sendButton" class="btn btn-success" disabled>
+                            <i class="bi bi-send mx-2"></i>Send
+                        </button>
 
                     </div>
 
@@ -185,4 +183,5 @@
             </div>
         </div>
     </div>
+
 {% endblock %}
