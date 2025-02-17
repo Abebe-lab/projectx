@@ -158,19 +158,6 @@
   {
     "model": "organogram.permission",
     "fields": {
-      "id": 12,
-      "name": "closed",
-      "description": "",
-      "display_name": "Closed Memo",
-      "icon": "bi-file-zip-fill",
-      "url": "memotracker/closed_memo_list",
-      "parent": 4,
-      "order": 4
-    }
-  },
-  {
-    "model": "organogram.permission",
-    "fields": {
       "id": 9,
       "name": "external_customer",
       "description": "",
