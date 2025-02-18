@@ -9,10 +9,6 @@ from django.contrib.auth.models import User
 
 from organogram.models import UserRole, ExternalCustomer, BusinessUnit
 
-
-
-
-
 class MemoSearchForm(forms.Form):
     subject = forms.CharField(max_length=300)
     memo_date = forms.DateTimeField()
