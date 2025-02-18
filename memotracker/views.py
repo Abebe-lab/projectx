@@ -2196,7 +2196,7 @@ def update_attached_memos(request):
     return JsonResponse({'error': 'Invalid request'})
 
 
-# This function returns memos that are either written by the current user or sent to the current user
+# returns memos either written by the current user or sent to the current user
 # def get_available_memos(user):
 #     memos = MemoRoute.objects.raw('''
 #         SELECT * FROM memotracker_memoroute
@@ -2210,6 +2210,8 @@ def update_attached_memos(request):
 #     return memos
 
 
+
+# returns memos either written by the current user or sent to the current user
 def get_available_memos(user):
     memos = MemoRoute.objects.filter(
         Q(from_user=user) | Q(to_user=user)
