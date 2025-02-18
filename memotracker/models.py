@@ -315,6 +315,5 @@ class MemoAttachment(models.Model):
 
     def get_attached_by_display(self):
         if self.attached_by:
-            # return f"{self.attached_by.username} {self.attached_by.last_name}"
-            return f"{self.attached_by.first_name} {self.attached_by.last_name}".strip()
+            return f"{self.attached_by.first_name} {self.attached_by.last_name}"
         return "Unknown"
