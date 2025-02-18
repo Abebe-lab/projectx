@@ -37,20 +37,13 @@ class Memo(models.Model):
         return self.reference_number + ' - ' + self.subject
 
     def memo_status(self):
-        """"Upon memo approval remove all approval routes"""
+
         pass
 
     def get_attached_memo_memos(self):
-        """
-        Returns a formatted string containing titles and reference numbers
-        of attached memos.
-
-        Returns:
-            str: A formatted string, e.g., "Memo 1 (ABC123), Memo 2 (XYZ456)"
-        """
 
         if not self.attached_memos.exists():
-            return ""  # Return empty string if no attachments
+            return ""
 
         titles_and_refs = []
         for memo in self.attached_memo.all():
@@ -188,8 +181,6 @@ class MemoAction(models.Model):
 
     def __str__(self):
         return f'{self.description}' + ' - ' + f'{self.description_am}'
-
-
 class MemoRoute(models.Model):
     memo = models.ForeignKey(Memo, on_delete=models.CASCADE)
     from_user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, related_name='route_source')
