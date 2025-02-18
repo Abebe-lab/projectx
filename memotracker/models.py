@@ -244,13 +244,6 @@ class MemoRoute(models.Model):
             user_role = UserRole.objects.get(user=self.to_user, active=True)
             if user_role:
                 return user_role.business_unit
-    # def get_source_bu(self):
-    #     if self.from_user:
-    #         user_role = UserRole.objects.get(user=self.from_user, active=True)
-    #         if user_role.business_unit:
-    #             return user_role.business_unit.name_en
-    #         else:  # Assuming it's a personal user
-    #             return user_role.from_user.first_name  # Adjust according to your User model
     def get_source_bu(self):
         if self.from_user:
             user = self.from_user
