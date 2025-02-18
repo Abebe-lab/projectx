@@ -336,7 +336,7 @@
                                       <small class="text-info text-bold">Attached by: </small>
 
                                       {% for attachment in memo.attachments.all %}
-                                            {{ attachment.get_attached_by_display }}
+                                            <small>{{ attachment.get_attached_by_display }}</small>
                                       {% endfor %}
                                   </p>
                                   <p class="card-text fs-6">
