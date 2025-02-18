@@ -290,12 +290,7 @@ class MemoAttachmentForm(ModelForm):
     def __init__(self, *args, **kwargs):
         memo_id=kwargs.pop('memo_id', None)
         super(MemoAttachmentForm, self).__init__(*args, **kwargs)
-
-        #set the memo id to be the memo id of the current memo
         if memo_id:
             self.instance.memo=Memo.objects.get(pk=memo_id)
-        #self.fields['attached_by'].initial = self.instance.memo.owner
-
-         # Add Bootstrap classes to the form fields
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
