@@ -3,13 +3,10 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
-from dms import apps
 from organogram.models import ContentTypeModelField, ExternalCustomer, UserRole, BusinessUnit, Profile
-from dms.models import Document
 from ckeditor_uploader.fields import RichTextUploadingField
 from django.db.models import Q
-from dms.models import Document  # Import Document if needed
-
+from dms.models import Document
 class Memo(models.Model):
     reference_number = models.CharField(max_length=50, unique=True)
     subject = models.CharField(max_length=300)
