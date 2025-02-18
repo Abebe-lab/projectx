@@ -51,7 +51,6 @@ from django.http import HttpResponseBadRequest
 import datetime
 from datetime import datetime
 
-
 def filter_memos(request, memos):
     option = request.GET.get('option')
     value = request.GET.get('value')
@@ -82,7 +81,6 @@ def filter_memos(request, memos):
         memos = memos.filter(id__in=memo_ids)
     return memos
 
-
 # Pagination method
 def paginate_memos(request, memos):
     paginator = Paginator(memos, 10)
@@ -90,7 +88,6 @@ def paginate_memos(request, memos):
     page_obj = paginator.get_page(page_number)
 
     return page_obj
-
 
 def get_memo_route(request, excluded_statuses=[""]):
     user = request.user
@@ -108,7 +105,6 @@ def get_memo_route(request, excluded_statuses=[""]):
         memo_ids = MemoRoute.objects.filter(destination_id=user.id, destination_type_id=type_user.id).exclude(
             status__in=excluded_statuses).values_list('memo_id', flat=True)
     return memo_ids
-
 
 # All memo list method
 def list_all_memo(request):
@@ -200,7 +196,6 @@ def personal_memo_list(request):
         'listName': 'Personal Memo',
     })
 
-
 def count_unread_memos(request, listName=None):
     user = request.user
     user_role = UserRole.objects.get(user=user, active=True)
@@ -222,12 +217,7 @@ def count_unread_memos(request, listName=None):
         filter_conditions &= ~Q(memo__content_type=ec_d_type) & Q(status='notseen')
 
         unread_count = MemoRoute.objects.filter(filter_conditions).count()
-        ##################
-        # unread_count = (
-        #         MemoRoute.objects.filter(filter_conditions).count() +
-        #         Memo.objects.filter(assigned_to=request.user).count()
-        # )
-        ##################
+
     elif listName == 'External Letter':
         filter_conditions &= Q(memo__content_type=ec_d_type) & Q(status='notseen')
         unread_count = MemoRoute.objects.filter(filter_conditions).count()
@@ -237,10 +227,6 @@ def count_unread_memos(request, listName=None):
         unread_count = Memo.objects.filter(
             Q(status='draft', created_by=user) | Q(approvalroute__to_user=user, status='draft')).distinct().count()
 
-        # unread_count = (
-        #         Memo.objects.filter(status='draft', created_by=user).count() +
-        #         ApprovalRoute.objects.filter(memo__status='draft', to_user=user).values('memo').distinct().count()
-        # )
     return JsonResponse({'message': 'success', 'count': unread_count})
 
 
