@@ -1516,16 +1516,19 @@ def memo_route_to_all(request, memo_id=None):
     user_role = UserRole.objects.get(user=request.user, active=True)
     bu = user_role.business_unit
     profile = Profile.objects.get(user=request.user)
+
     if request.method == 'POST':
         attachments = request.POST.get('attachments')
         attachment_ids = []
         if attachments is not None:
             attachment_ids = attachments.split(',')
 
-        form = MemoForm(request.POST, user_id=user_role.user.id, bunit_id=user_role.business_unit.id)
+        # Change user_id to user
+        form = MemoForm(request.POST, user=request.user, bunit_id=user_role.business_unit.id)
+
         if memo_id is not None:
             memo = Memo.objects.get(id=memo_id)
-            form = MemoForm(request.POST, instance=memo, user_id=user_role.user.id, bunit_id=user_role.business_unit.id)
+            form = MemoForm(request.POST, instance=memo, user=request.user, bunit_id=user_role.business_unit.id)
 
         if form.is_valid():
             memo = form.save(commit=False)
@@ -1548,7 +1551,7 @@ def memo_route_to_all(request, memo_id=None):
                     reference = code + '/' + str(last_number) + '/' + year
                 memo.reference_number = reference
 
-            linked_memos = [] or request.POST.getlist('memo_ids')
+            linked_memos = request.POST.getlist('memo_ids')
             content_type_str = str(form.cleaned_data['content_type'])
             app_label, model_name = content_type_str.split(' | ')
 
@@ -1558,6 +1561,7 @@ def memo_route_to_all(request, memo_id=None):
                 object_id = user_role.business_unit.id
 
             memo.object_id = object_id
+
             try:
                 if memo.content_type != ContentType.objects.get(model='user'):
                     bu.last_memo_ref_number += 1
@@ -1570,9 +1574,8 @@ def memo_route_to_all(request, memo_id=None):
                 memo.status = 'sent'
                 memo.save()
 
-                if attachment_ids:
-                    if attachment_ids[0] != '':
-                        create_memo_attachments(memo, attachment_ids)
+                if attachment_ids and attachment_ids[0] != '':
+                    create_memo_attachments(memo, attachment_ids)
 
                 if linked_memos:
                     link_memo_attachments(memo, linked_memos)
@@ -1582,21 +1585,108 @@ def memo_route_to_all(request, memo_id=None):
                     sender = BusinessUnit.objects.get(id=memo.object_id).name_en
                 else:
                     sender = request.user.first_name + " " + request.user.last_name
-                notification_message = sender + " have Sent memo with Reference No: " + memo.reference_number + "!"
-                url = "/memotracker/memo/" + str(memo.id) + "/" + "Incoming Memo"
+                notification_message = f"{sender} has sent a memo with Reference No: {memo.reference_number}!"
+                url = f"/memotracker/memo/{memo.id}/Incoming Memo"
                 notification = Notification.create_notification(request.user, notify_type, notification_message, url)
                 users = User.objects.all().exclude(id=request.user.id)
                 for user in users:
                     save_notification(user, notification)
-                print(f"Memo with reference number {memo.reference_number} successfully Sent to All")
+                print(f"Memo with reference number {memo.reference_number} successfully sent to all.")
             except Exception as e:
-                print(f"Memo Saving Failed: {str(e)}")
+                print(f"Memo saving failed: {str(e)}")
         else:
             for field, errors in form.errors.items():
                 for error in errors:
                     print(f"Error in field '{field}': {error}")
-    # return JsonResponse({'message': message, 'redirect_url': 'outgoing_memo_list'})
+
     return redirect('outgoing_memo_list')
+
+# @login_required
+# def memo_route_to_all(request, memo_id=None):
+#     user_role = UserRole.objects.get(user=request.user, active=True)
+#     bu = user_role.business_unit
+#     profile = Profile.objects.get(user=request.user)
+#     if request.method == 'POST':
+#         attachments = request.POST.get('attachments')
+#         attachment_ids = []
+#         if attachments is not None:
+#             attachment_ids = attachments.split(',')
+#
+#         form = MemoForm(request.POST, user_id=user_role.user.id, bunit_id=user_role.business_unit.id)
+#         if memo_id is not None:
+#             memo = Memo.objects.get(id=memo_id)
+#             form = MemoForm(request.POST, instance=memo, user_id=user_role.user.id, bunit_id=user_role.business_unit.id)
+#
+#         if form.is_valid():
+#             memo = form.save(commit=False)
+#             memo.keywords = str('')
+#             if memo_id is None:
+#                 memo.created_by = user_role.user
+#             else:
+#                 reference = memo.reference_number
+#                 if memo.content_type.model == 'businessunit':
+#                     parts = memo.reference_number.split('/')
+#                     code = '/'.join(parts[:2])
+#                     year = parts[3][:4]
+#                     last_number = bu.last_memo_ref_number + 1
+#                     reference = code + '/' + str(last_number) + '/' + year
+#                 elif memo.content_type.model == 'user':
+#                     parts = memo.reference_number.split('/')
+#                     code = '/'.join(parts[:1])
+#                     year = parts[2][:4]
+#                     last_number = profile.last_personal_memo_ref_number + 1
+#                     reference = code + '/' + str(last_number) + '/' + year
+#                 memo.reference_number = reference
+#
+#             linked_memos = [] or request.POST.getlist('memo_ids')
+#             content_type_str = str(form.cleaned_data['content_type'])
+#             app_label, model_name = content_type_str.split(' | ')
+#
+#             if model_name == 'user':
+#                 object_id = user_role.user.id
+#             else:
+#                 object_id = user_role.business_unit.id
+#
+#             memo.object_id = object_id
+#             try:
+#                 if memo.content_type != ContentType.objects.get(model='user'):
+#                     bu.last_memo_ref_number += 1
+#                     bu.save()
+#
+#                 if memo.content_type == ContentType.objects.get(model='user'):
+#                     profile.last_personal_memo_ref_number += 1
+#                     profile.save()
+#
+#                 memo.status = 'sent'
+#                 memo.save()
+#
+#                 if attachment_ids:
+#                     if attachment_ids[0] != '':
+#                         create_memo_attachments(memo, attachment_ids)
+#
+#                 if linked_memos:
+#                     link_memo_attachments(memo, linked_memos)
+#
+#                 notify_type = NotificationType.objects.get(name="Public Memo")
+#                 if memo.content_type.model == 'businessunit':
+#                     sender = BusinessUnit.objects.get(id=memo.object_id).name_en
+#                 else:
+#                     sender = request.user.first_name + " " + request.user.last_name
+#                 notification_message = sender + " have Sent memo with Reference No: " + memo.reference_number + "!"
+#                 url = "/memotracker/memo/" + str(memo.id) + "/" + "Incoming Memo"
+#                 notification = Notification.create_notification(request.user, notify_type, notification_message, url)
+#                 users = User.objects.all().exclude(id=request.user.id)
+#                 for user in users:
+#                     save_notification(user, notification)
+#                 print(f"Memo with reference number {memo.reference_number} successfully Sent to All")
+#             except Exception as e:
+#                 print(f"Memo Saving Failed: {str(e)}")
+#         else:
+#             for field, errors in form.errors.items():
+#                 for error in errors:
+#                     print(f"Error in field '{field}': {error}")
+#     # return JsonResponse({'message': message, 'redirect_url': 'outgoing_memo_list'})
+#     return redirect('outgoing_memo_list')
 
 
 def memo_route2(request, memo_id, attachment_link=None):  # Added attachment_link parameter
