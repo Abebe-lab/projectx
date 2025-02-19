@@ -31,7 +31,7 @@ ProjectX
 1. First, clone the repository to your local machine:
 
 ```bash 
-    git clone https://github.com/belmeetmule/projectx.git 
+    git clone https://github.com/Abebe-lab/projectx.git 
 ```
 
 2. Get into the cloned directory
@@ -41,7 +41,7 @@ ProjectX
 3. Create vertual environemt
 > For linux based systems
     ```bash
-        pip3 -m venv px-venv
+        pip3 -m venv projectx-mdm
     ```
 > For Windows based systems
     ```bash
