@@ -23,7 +23,7 @@ DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
 #     )
 # )
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') or ['localhost', '127.0.0.1', 'www.ipdc3.gov.et']
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') #or ['localhost', '127.0.0.1', 'www.ipdc3.gov.et']
 
 # ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') or ['localhost', '127.0.0.1']
 
