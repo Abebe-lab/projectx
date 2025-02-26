@@ -2510,6 +2510,8 @@ def generate_report(request, memo_id, format):
 
             # Render the PDF
             html = render_to_string('pdf_template.html', context)
+
+
             pdf = HTML(string=html).write_pdf()
 
             if request.GET.get('download') == 'true':
