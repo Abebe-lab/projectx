@@ -255,3 +255,4 @@ LOGIN_REDIRECT_URL = '/user/dashboard/'  # Your desired redirect URL after login
 LOGIN_URL = '/user/login/'  # Replace '/your_login_url/' with your actual login URL
 
 SESSION_COOKIE_AGE = 14400  # 240 minutes in seconds
+
