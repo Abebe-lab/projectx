@@ -14,20 +14,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
 
-######################################
-# ALLOWED_HOSTS = []
-# ALLOWED_HOSTS.extend(
-#     filter(
-#         None,
-#         os.environ.get('ALLOWED_HOSTS', '').split(','),
-#     )
-# )
-
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') #or ['localhost', '127.0.0.1', 'www.ipdc3.gov.et']
-
-# ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') or ['localhost', '127.0.0.1']
-
-################################################
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 
 # Application definition
 
@@ -148,12 +135,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 CKEDITOR_CONFIGS = {
     'default': {
-     
-        # 'skin': 'moono',
-        # # 'skin': 'office2013',
-        # 'toolbar_Basic': [
-        #     ['Source', '-', 'Bold', 'Italic']
-        # ],
         'toolbar_Custom': [
             {'name': 'styles', 'items': ['Styles', 'Format', 'Font', 'FontSize']},
             {'name': 'yourcustomtools', 'items': [
@@ -207,8 +188,6 @@ CKEDITOR_CONFIGS = {
         'templates_replaceContent': False,
     }
 }
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -219,7 +198,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
