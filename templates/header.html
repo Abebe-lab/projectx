@@ -81,7 +81,7 @@
     });
     
     // setup notification socket
-    const notifySocket = new WebSocket('ws://' + window.location.host + '/ws/notifications/');
+    const notifySocket = new WebSocket('wss://' + window.location.host + '/ws/notifications/');
     
     // on socket open
     notifySocket.onopen = function (e) {
