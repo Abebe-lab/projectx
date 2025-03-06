@@ -20,3 +20,4 @@ class CustomerForm(forms.ModelForm):
     class Meta:
         model = ExternalCustomer
         fields = ['name_en', 'name_am', 'customer_type', 'description', 'contact']
+

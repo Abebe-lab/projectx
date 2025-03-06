@@ -326,10 +326,16 @@ div#id_external_section {
 }
 
 .modal-content {
-    left: 100;
+    left: 0;
 }
 
 #id_description {
     width: 450px;
-    height: auto;
+    height: 100;
 }
+.modal-body {
+    width: auto;
+}
+
+
+
