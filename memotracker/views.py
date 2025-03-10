@@ -44,6 +44,7 @@ from notification.models import Notification, NotificationType, NotificationReci
 from datetime import date, timedelta
 
 from ethiopian_date import EthiopianDateConverter
+from ethio_date_converter import EthiopianDateConverter
 import logging
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseBadRequest
@@ -616,75 +617,36 @@ def closed_memo_list(request):
     })
 
 
-def to_ethiopian(year, month, day):
-    # Calculate the Ethiopian date from the Gregorian date
-    # Determine if the Gregorian year is a leap year
-    is_gregorian_leap_year = (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)
-
-    # Days in each month of the Gregorian calendar
-    days_in_gregorian_months = [31, 28 + (1 if is_gregorian_leap_year else 0), 31, 30, 31, 30,
-                                31, 31, 30, 31, 30, 31]
-
-    # Calculate the total days from the start of the Gregorian year
-    day_of_year = sum(days_in_gregorian_months[:month - 1]) + day
-
-    # Ethiopian year starts on Meskerem 1
-    # Gregorian year starts on January 1
-    if month < 9 or (month == 9 and day < 11):
-        eth_year = year - 8  # Ethiopian year is 8 years behind
-    else:
-        eth_year = year - 7  # Ethiopian year is 7 years behind
-
-    # Calculate Ethiopian day and month
-    if day_of_year > 254:  # After September 11
-        eth_day_of_year = day_of_year - 254  # 254 days from January 1 to September 10
-    else:
-        eth_day_of_year = day_of_year + (365 if is_gregorian_leap_year else 364) - 254
-
-    # Ethiopian months have 30 days for the first 13 months
-    eth_month = (eth_day_of_year - 1) // 30 + 1
-    eth_day = (eth_day_of_year - 1) % 30 + 1
-
-    return eth_day, eth_month, eth_year
-
-
-def to_gregorian(eth_year, eth_month, eth_day):
-    # Calculate the Gregorian date from the Ethiopian date
-    # Ethiopian year starts on Meskerem 1 (September 11 in Gregorian)
-    if eth_month < 1 or eth_month > 13 or eth_day < 1 or eth_day > 30:
-        raise ValueError("Invalid Ethiopian date")
-
-    # Determine the Gregorian year
-    if eth_month < 5:  # Ethiopian months Meskerem to Genbot (1-4)
-        greg_year = eth_year + 8  # Gregorian year is 8 years ahead
-    else:
-        greg_year = eth_year + 7  # Gregorian year is 7 years ahead
-
-    # Calculate the day of the year for Ethiopian date
-    eth_day_of_year = (eth_month - 1) * 30 + eth_day
-
-    # Determine if the Gregorian year is a leap year
-    is_gregorian_leap_year = (greg_year % 4 == 0 and greg_year % 100 != 0) or (greg_year % 400 == 0)
-
-    # Calculate the total days to add from the start of the Gregorian year
-    if eth_month < 5:  # Before Genbot (September 11)
-        day_of_year = eth_day_of_year + 254  # 254 days from January 1 to September 10
-    else:  # After Genbot
-        day_of_year = eth_day_of_year - 30 + 254 + (1 if is_gregorian_leap_year else 0)
-
-    # Calculate the month and day in the Gregorian calendar
-    days_in_gregorian_months = [31, 28 + (1 if is_gregorian_leap_year else 0), 31, 30, 31, 30,
-                                31, 31, 30, 31, 30, 31]
-
-    month = 1
-    while day_of_year > days_in_gregorian_months[month - 1]:
-        day_of_year -= days_in_gregorian_months[month - 1]
-        month += 1
-
-    day = day_of_year
-
-    return day, month, greg_year
-
+# def to_ethiopian(year, month, day):
+#     # Calculate the Ethiopian date from the Gregorian date
+#     # Determine if the Gregorian year is a leap year
+#     is_gregorian_leap_year = (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)
+#
+#     # Days in each month of the Gregorian calendar
+#     days_in_gregorian_months = [31, 28 + (1 if is_gregorian_leap_year else 0), 31, 30, 31, 30,
+#                                 31, 31, 30, 31, 30, 31]
+#
+#     # Calculate the total days from the start of the Gregorian year
+#     day_of_year = sum(days_in_gregorian_months[:month - 1]) + day
+#
+#     # Ethiopian year starts on Meskerem 1
+#     # Gregorian year starts on January 1
+#     if month < 9 or (month == 9 and day < 11):
+#         eth_year = year - 8  # Ethiopian year is 8 years behind
+#     else:
+#         eth_year = year - 7  # Ethiopian year is 7 years behind
+#
+#     # Calculate Ethiopian day and month
+#     if day_of_year > 254:  # After September 11
+#         eth_day_of_year = day_of_year - 254  # 254 days from January 1 to September 10
+#     else:
+#         eth_day_of_year = day_of_year + (365 if is_gregorian_leap_year else 364) - 254
+#
+#     # Ethiopian months have 30 days for the first 13 months
+#     eth_month = (eth_day_of_year - 1) // 30 + 1
+#     eth_day = (eth_day_of_year - 1) % 30 + 1
+#
+#     return eth_day, eth_month, eth_year
 
 @login_required
 def memo_detail(request, pk, list_name=None):
@@ -765,7 +727,12 @@ def memo_detail(request, pk, list_name=None):
                     user_route.date_viewed = timezone.now()
                     user_route.save()
 
-    eth_day, eth_month, eth_year = to_ethiopian(memo.memo_date.year, memo.memo_date.month, memo.memo_date.day)
+    # eth_day, eth_month, eth_year = to_ethiopian(memo.memo_date.year, memo.memo_date.month, memo.memo_date.day)
+    # eth_date_str = f"{eth_day:02d}/{eth_month:02d}/{eth_year}"
+
+    memo_date = memo.memo_date
+    converter = EthiopianDateConverter()
+    eth_day, eth_month, eth_year = converter.to_ethiopian(memo_date.year, memo_date.month, memo_date.day)
     eth_date_str = f"{eth_day:02d}/{eth_month:02d}/{eth_year}"
 
     return render(request, 'memotracker/memo_detail.html', {
@@ -783,7 +750,6 @@ def memo_detail(request, pk, list_name=None):
         'direct_list_count': direct_list_count,
         'cc_list_count': cc_list_count,
         'listName': list_name,
-
         'ethDate': eth_date_str,
     })
 
@@ -2373,8 +2339,17 @@ def generate_report(request, memo_id, format):
             business_unit_created_by = [user_role.business_unit.name_en for user_role in user_roles][0]
 
     else:
-        eth_day, eth_month, eth_year = to_ethiopian(memo.memo_date.year, memo.memo_date.month, memo.memo_date.day)
-        date_str = f"{eth_day:02d}/{eth_month:02d}/{eth_year}"
+        # eth_day, eth_month, eth_year = to_ethiopian(memo.memo_date.year, memo.memo_date.month, memo.memo_date.day)
+        # date_str = f"{eth_day:02d}/{eth_month:02d}/{eth_year}"
+
+        memo_date = memo.memo_date
+        converter = EthiopianDateConverter()
+
+        eth_day, eth_month, eth_year = converter.to_ethiopian(memo_date.year, memo_date.month, memo_date.day)
+        # date_str = f"{eth_day:02d}/{eth_month:02d}/{eth_year}"
+        date_str = f"{eth_year:02d}/{eth_month:02d}/{eth_day:02d}"
+
+
         from_field = 'ከ:'
         if memo.public:
             to = 'ለ፡ ኮርፖሬሽኑ የስራ ኃላፊዎች እና ሰራተኞች በሙሉ'
@@ -2388,8 +2363,9 @@ def generate_report(request, memo_id, format):
             business_unit_created_by = memo.created_by.first_name + ' ' + memo.created_by.last_name
         else:
             business_unit_created_by = [user_role.business_unit.name_am for user_role in user_roles][0]
-
     # Handle PDF generation
+    print("Ethiopian", date_str)
+
     if format == 'pdf':
         content_paragraphs = memo.content.split('\n')
         sender_bu = user_role.business_unit  # Get the sender's business unit
