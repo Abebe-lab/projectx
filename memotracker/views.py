@@ -370,20 +370,6 @@ def incoming_memo_list(request):
         ~Q(public=True, created_by=request.user)
     ).exclude(Q(status__in=excluded_statuses)).order_by('-last_updated')
 
-    #####################
-    # memos = Memo.objects.filter(
-    #     (
-    #             Q(id__in=memo_ids) |
-    #             Q(public=True, created_date__gte=user_creation_time) |
-    #             Q(assigned_to=request.user)  # Include memos assigned to the current user
-    #     ) &
-    #     (
-    #             Q(content_type_id=content_type_id) |
-    #             Q(content_type_id=content_type_user)
-    #     ) &
-    #     ~Q(public=True, created_by=request.user)
-    # ).exclude(Q(status__in=excluded_statuses)).order_by('-last_updated')
-    ####################
 
     memos = filter_memos(request, memos)
     page_obj = paginate_memos(request, memos)
@@ -495,7 +481,6 @@ def external_memo_list(request):
         'business_unit': business_unit,
 
     })
-
 
 # Approved memo list
 def approved_memo_list(request):
@@ -691,12 +676,6 @@ def memo_detail(request, pk, list_name=None):
     cc_list_count = len(cc_list)
     direct_list_count = len(direct_list)
 
-    # user_roles = UserRole.objects.filter(user__in=[memo.created_by, memo.assigned_to])
-    # business_units = [user_role.business_unit.name_en if memo.in_english else user_role.business_unit.name_am for
-    #                   user_role in user_roles]
-    # business_unit_created_by = business_units[0]
-    # business_unit_assigned_to = business_units[1] if len(business_units) > 1 else None
-    # ###############################
     user_roles = UserRole.objects.filter(user__in=[memo.created_by, memo.assigned_to])
     business_units = [user_role.business_unit.name_en if memo.in_english else user_role.business_unit.name_am for
                       user_role in user_roles]
@@ -704,7 +683,7 @@ def memo_detail(request, pk, list_name=None):
     # Check the length of business_units before accessing indexes
     business_unit_created_by = business_units[0] if len(business_units) > 0 else None
     business_unit_assigned_to = business_units[1] if len(business_units) > 1 else None
-    # ################################
+
 
     is_outgoing_memo = memo.content_type.model == 'businessunit' and memo.object_id == user_role.business_unit_id and not memo_routes.filter(
         destination_type=type_user, destination_id=request.user.id).exists()
@@ -733,8 +712,12 @@ def memo_detail(request, pk, list_name=None):
 
     memo_date = memo.memo_date
     converter = EthiopianDateConverter()
-    eth_day, eth_month, eth_year = converter.to_ethiopian(memo_date.year, memo_date.month, memo_date.day)
-    eth_date_str = f"{eth_day:02d}/{eth_month:02d}/{eth_year}"
+    try:
+        eth_day, eth_month, eth_year = converter.to_ethiopian(memo_date.year, memo_date.month, memo_date.day)
+        date_str = f"{eth_year}/{eth_month:02d}/{eth_day:02d}"
+    except Exception as e:
+        print(f"Error during date conversion: {e}")
+        date_str = "Invalid date"
 
     return render(request, 'memotracker/memo_detail.html', {
         'memo': memo,
@@ -932,142 +915,6 @@ def create_memo(request):
 
     })
 
-# def create_memo(request):
-#     user_role = UserRole.objects.get(user=request.user, active=True)  # Get the user's role
-#     bu = user_role.business_unit
-#     dept_users = User.objects.filter(userrole__business_unit=bu).exclude(id=request.user.id)
-#
-#     last_bu_ref_number = bu.last_memo_ref_number
-#     last_ref_number = f'IPDC/{bu.code}/{last_bu_ref_number}/{str(date.today().year)}'
-#
-#     profile = Profile.objects.get(user=request.user)
-#     last_personal_memo_ref_number = f'P{request.user.id}/{profile.last_personal_memo_ref_number}/{str(date.today().year)}'
-#
-#     # Get the available memos for the current user
-#     available_memos = get_available_memos(request.user)
-#
-#     # Initialize manager and delegate variables
-#     manager = user_role.role.is_manager
-#     delegate = user_role.deligated
-#
-#     if request.method == 'POST':
-#         attachments = request.POST.get('attachments')
-#         attachment_ids = attachments.split(',') if attachments else []  # Split attachment IDs into a list
-#         form = MemoForm(request.POST, request.FILES, user=request.user,
-#                         bunit_id=bu.id)  # Pass the current user and business unit ID
-#
-#         message = ""
-#
-#         if form.is_valid():
-#             memo = form.save(commit=False)
-#             memo.created_by = user_role.user
-#             memo.keywords = str('')
-#
-#             linked_memos = request.POST.getlist('memo_ids')  # Get the linked memos from the form
-#
-#             content_type_str = str(form.cleaned_data['content_type'])
-#             app_label, model_name = content_type_str.split(' | ')
-#
-#             # Determine the non-form field value based on the owner type
-#             object_id = user_role.user.id if model_name == 'user' else user_role.business_unit.id
-#             memo.object_id = object_id
-#
-#             if not manager and not delegate:
-#                 document_file = form.cleaned_data.get('document')
-#                 if document_file:
-#                     document = Document.objects.create(
-#                         title=document_file.name,
-#                         uploaded_by=request.user,
-#                         file=document_file
-#                     )
-#                     memo.document = document  # Link the uploaded document to the memo
-#
-#             # Handle save draft action
-#             if 'save_draft' in request.POST:
-#                 memo.status = 'draft'  # Set the status to 'draft'
-#                 memo.reference_number = f"{memo.reference_number}-{str(datetime.today().time().hour)}:{str(datetime.today().time().minute)}:{str(datetime.today().time().second)}"
-#
-#                 memo.memo_date = datetime.today()
-#                 memo.save()
-#
-#                 # Handle memo attachments
-#                 if attachment_ids and attachment_ids[0] != '':
-#                     create_memo_attachments(memo, attachment_ids)
-#
-#                 # Link memos if any
-#                 if linked_memos:
-#                     link_memo_attachments(memo, linked_memos)
-#
-#                 return redirect('draft_memo_list')  # Redirect to the memo list view
-#
-#             # Handle send memo action
-#             elif 'send_memo' in request.POST:
-#                 try:
-#                     if memo.content_type != ContentType.objects.get(model='user'):
-#                         bu.last_memo_ref_number += 1
-#                         bu.save()
-#
-#                     if memo.content_type == ContentType.objects.get(model='user'):
-#                         profile.last_personal_memo_ref_number += 1
-#                         profile.save()
-#
-#                     memo.status = 'sent'
-#                     memo.save()
-#
-#                     # Handle memo attachments
-#                     if attachment_ids and attachment_ids[0] != '':
-#                         create_memo_attachments(memo, attachment_ids)
-#
-#                     # Link memos if any
-#                     if linked_memos:
-#                         link_memo_attachments(memo, linked_memos)
-#
-#                     message = save_memo_route(request, memo)
-#                 except Exception as e:
-#                     message = f"Memo Saving Failed: {str(e)}"
-#
-#             # Handle approval send action
-#             elif 'approval_send' in request.POST:
-#                 try:
-#                     memo.status = 'draft'  # Set the status to 'draft'
-#                     memo.reference_number = f"{memo.reference_number}-{str(datetime.today().time().hour)}:{str(datetime.today().time().minute)}:{str(datetime.today().time().second)}"
-#                     memo.save()
-#
-#                     # Handle memo attachments
-#                     if attachment_ids and attachment_ids[0] != '':
-#                         create_memo_attachments(memo, attachment_ids)
-#
-#                     # Link memos if any
-#                     if linked_memos:
-#                         link_memo_attachments(memo, linked_memos)
-#
-#                     message = save_approval_route(request, memo)
-#                 except Exception as e:
-#                     message = f"Memo Saving Failed: {str(e)}"
-#
-#         else:
-#             print('Failed to save memo')
-#             for field, errors in form.errors.items():
-#                 for error in errors:
-#                     message += f"Error in field '{field}': {error}"
-#
-#         return JsonResponse({'message': message})
-#
-#     else:
-#         form = MemoForm(user=request.user, bunit_id=bu.id)  # Pass the current user and business unit ID
-#
-#     return render(request, 'memotracker/create_memo.html', {
-#         'form': form,
-#         'memo_type': user_role,
-#         'last_ref_number': last_ref_number,
-#         'last_personal_memo_ref_number': last_personal_memo_ref_number,
-#         'user_id': user_role.user.id,
-#         'bunit_code': bu.code,
-#         'available_memos': available_memos,
-#         'dept_users': dept_users,
-#         'manager': manager,
-#         'delegate': delegate,
-#     })
 @login_required
 def external_memo(request):
     user_role = UserRole.objects.get(user=request.user, active=True)
@@ -1118,79 +965,6 @@ def save_notification(recipient, notification):
     else:
         print("Notification not created successfully!")
 
-# def save_destination(request, form_data, memo, prev_memo_route, new_ref_number, destination_list, destination_type,
-#                      carbon_copy_list):
-#     user_role = UserRole.objects.get(user=request.user,
-#                                      active=True)
-#     i = 0
-#     message = ""
-#     notify_type = NotificationType.objects.get(name="Incoming Memo")
-#     notification_message = request.user.first_name + " " + request.user.last_name + " have Sent memo with Reference No: " + memo.reference_number + "!"
-#     if memo.content_type == ContentType.objects.get(model='externalcustomer'):
-#         memo_list = "External Letter"
-#     else:
-#         memo_list = "Incoming Memo"
-#     url = "/memotracker/memo/" + str(memo.id) + "/" + memo_list
-#     notification = Notification.create_notification(request.user, notify_type, notification_message, url)
-#     for destination_id in destination_list:
-#         form_data['destination_id'] = destination_id
-#         form_data['destination_type'] = destination_type
-#         form_data['carbon_copy'] = carbon_copy_list[i]
-#         if prev_memo_route is not None:
-#             form_data['level'] = prev_memo_route.level + 1
-#         form = MemoRouteForm(form_data or None, current_user=request.user)
-#         if form.is_valid():
-#             memo_route = form.save(commit=False)
-#             memo_route.destination_id = destination_id
-#             memo_route.destination_type = destination_type
-#             memo_route.save()
-#             recipients = []
-#             if destination_type != ContentType.objects.get(model='user'):
-#                 user_roles = UserRole.objects.filter(
-#                     Q(business_unit_id=destination_id, active=True) & (Q(role__is_manager=True) | Q(deligated=True)))
-#                 for user_role1 in user_roles:
-#                     recipients.append(user_role1.user)
-#             else:
-#                 recipients.append(User.objects.get(pk=destination_id))
-#
-#             if prev_memo_route is not None:
-#                 prev_memo_route.status = "forwarded"
-#                 prev_memo_route.save()
-#
-#             if memo.status == 'draft' or memo.status == 'approved':
-#                 if memo.content_type != ContentType.objects.get(model='user'):
-#                     bu = user_role.business_unit
-#                     bu.last_memo_ref_number += 1
-#                     bu.save()
-#                 if memo.content_type == ContentType.objects.get(model='user'):
-#                     profile = Profile.objects.get(user=request.user)
-#                     num = profile.last_personal_memo_ref_number
-#                     number = num + 1
-#                     profile.last_personal_memo_ref_number = number
-#                     profile.save()
-#                 out_notification_message = "The memo you drafted as: " + memo.reference_number + " is Sent with Reference No: " + new_ref_number + "!"
-#                 memo.reference_number = new_ref_number
-#                 memo.status = 'sent'
-#                 memo.save()
-#                 new_message = request.user.first_name + " " + request.user.last_name + " have Sent memo with Reference No: " + memo.reference_number + "!"
-#                 notification.message = new_message
-#                 notification.save()
-#                 if request.user.id != memo.created_by_id:
-#                     out_url = "/memotracker/memo/" + str(memo.id) + "/" + "Outgoing Memo"
-#                     out_notify_type = NotificationType.objects.get(name="Reminder")
-#                     out_recipient = memo.created_by
-#                     draft_notification = Notification.create_notification(request.user, out_notify_type,
-#                                                                           out_notification_message, out_url)
-#                     save_notification(out_recipient, draft_notification)
-#             for recipient in recipients:
-#                 save_notification(recipient, notification)
-#             message = "success"
-#         else:
-#             for field, errors in form.errors.items():
-#                 for error in errors:
-#                     message += f"Error in field '{field}': {error}"
-#         i += 1
-#     return message
 
 def save_destination(request, form_data, memo, prev_memo_route, new_ref_number, destination_list, destination_type,
                      carbon_copy_list):
@@ -1567,94 +1341,6 @@ def memo_route_to_all(request, memo_id=None):
                     print(f"Error in field '{field}': {error}")
 
     return redirect('outgoing_memo_list')
-
-# @login_required
-# def memo_route_to_all(request, memo_id=None):
-#     user_role = UserRole.objects.get(user=request.user, active=True)
-#     bu = user_role.business_unit
-#     profile = Profile.objects.get(user=request.user)
-#     if request.method == 'POST':
-#         attachments = request.POST.get('attachments')
-#         attachment_ids = []
-#         if attachments is not None:
-#             attachment_ids = attachments.split(',')
-#
-#         form = MemoForm(request.POST, user_id=user_role.user.id, bunit_id=user_role.business_unit.id)
-#         if memo_id is not None:
-#             memo = Memo.objects.get(id=memo_id)
-#             form = MemoForm(request.POST, instance=memo, user_id=user_role.user.id, bunit_id=user_role.business_unit.id)
-#
-#         if form.is_valid():
-#             memo = form.save(commit=False)
-#             memo.keywords = str('')
-#             if memo_id is None:
-#                 memo.created_by = user_role.user
-#             else:
-#                 reference = memo.reference_number
-#                 if memo.content_type.model == 'businessunit':
-#                     parts = memo.reference_number.split('/')
-#                     code = '/'.join(parts[:2])
-#                     year = parts[3][:4]
-#                     last_number = bu.last_memo_ref_number + 1
-#                     reference = code + '/' + str(last_number) + '/' + year
-#                 elif memo.content_type.model == 'user':
-#                     parts = memo.reference_number.split('/')
-#                     code = '/'.join(parts[:1])
-#                     year = parts[2][:4]
-#                     last_number = profile.last_personal_memo_ref_number + 1
-#                     reference = code + '/' + str(last_number) + '/' + year
-#                 memo.reference_number = reference
-#
-#             linked_memos = [] or request.POST.getlist('memo_ids')
-#             content_type_str = str(form.cleaned_data['content_type'])
-#             app_label, model_name = content_type_str.split(' | ')
-#
-#             if model_name == 'user':
-#                 object_id = user_role.user.id
-#             else:
-#                 object_id = user_role.business_unit.id
-#
-#             memo.object_id = object_id
-#             try:
-#                 if memo.content_type != ContentType.objects.get(model='user'):
-#                     bu.last_memo_ref_number += 1
-#                     bu.save()
-#
-#                 if memo.content_type == ContentType.objects.get(model='user'):
-#                     profile.last_personal_memo_ref_number += 1
-#                     profile.save()
-#
-#                 memo.status = 'sent'
-#                 memo.save()
-#
-#                 if attachment_ids:
-#                     if attachment_ids[0] != '':
-#                         create_memo_attachments(memo, attachment_ids)
-#
-#                 if linked_memos:
-#                     link_memo_attachments(memo, linked_memos)
-#
-#                 notify_type = NotificationType.objects.get(name="Public Memo")
-#                 if memo.content_type.model == 'businessunit':
-#                     sender = BusinessUnit.objects.get(id=memo.object_id).name_en
-#                 else:
-#                     sender = request.user.first_name + " " + request.user.last_name
-#                 notification_message = sender + " have Sent memo with Reference No: " + memo.reference_number + "!"
-#                 url = "/memotracker/memo/" + str(memo.id) + "/" + "Incoming Memo"
-#                 notification = Notification.create_notification(request.user, notify_type, notification_message, url)
-#                 users = User.objects.all().exclude(id=request.user.id)
-#                 for user in users:
-#                     save_notification(user, notification)
-#                 print(f"Memo with reference number {memo.reference_number} successfully Sent to All")
-#             except Exception as e:
-#                 print(f"Memo Saving Failed: {str(e)}")
-#         else:
-#             for field, errors in form.errors.items():
-#                 for error in errors:
-#                     print(f"Error in field '{field}': {error}")
-#     # return JsonResponse({'message': message, 'redirect_url': 'outgoing_memo_list'})
-#     return redirect('outgoing_memo_list')
-
 
 def memo_route2(request, memo_id, attachment_link=None):  # Added attachment_link parameter
     user_role = UserRole.objects.get(user=request.user, active=True)
@@ -2345,11 +2031,6 @@ def generate_report(request, memo_id, format):
 
         memo_date = memo.memo_date
         converter = EthiopianDateConverter()
-
-        # eth_day, eth_month, eth_year = converter.to_ethiopian(memo_date.year, memo_date.month, memo_date.day)
-        # # date_str = f"{eth_day:02d}/{eth_month:02d}/{eth_year}"
-        # date_str = f"{eth_year:02d}/{eth_month:02d}/{eth_day:02d}"
-
         try:
             eth_day, eth_month, eth_year = converter.to_ethiopian(memo_date.year, memo_date.month, memo_date.day)
             date_str = f"{eth_year}/{eth_month:02d}/{eth_day:02d}"
@@ -2372,7 +2053,6 @@ def generate_report(request, memo_id, format):
         else:
             business_unit_created_by = [user_role.business_unit.name_am for user_role in user_roles][0]
     # Handle PDF generation
-    print("Ethiopian", date_str)
 
     if format == 'pdf':
         content_paragraphs = memo.content.split('\n')
