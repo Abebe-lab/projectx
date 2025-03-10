@@ -714,7 +714,7 @@ def memo_detail(request, pk, list_name=None):
     converter = EthiopianDateConverter()
     try:
         eth_day, eth_month, eth_year = converter.to_ethiopian(memo_date.year, memo_date.month, memo_date.day)
-        eth_date_str = f"{eth_year}/{eth_month:02d}/{eth_day:02d}"
+        eth_date_str = f"{eth_year:02d}/{eth_month:02d}/{eth_day:02d}"
     except Exception as e:
         print(f"Error during date conversion: {e}")
         eth_date_str = "Invalid date"
@@ -1949,6 +1949,7 @@ def get_available_memos(user):
 
 @login_required
 def generate_report(request, memo_id, format):
+
     user_role = UserRole.objects.get(user=request.user, active=True)
     memo = get_object_or_404(Memo, pk=memo_id)
     memo_routes = memo.memoroute_set.filter(level=1).order_by('-date_sent')
@@ -2033,7 +2034,7 @@ def generate_report(request, memo_id, format):
         converter = EthiopianDateConverter()
         try:
             eth_day, eth_month, eth_year = converter.to_ethiopian(memo_date.year, memo_date.month, memo_date.day)
-            date_str = f"{eth_year}/{eth_month:02d}/{eth_day:02d}"
+            date_str = f"{eth_year:02d}/{eth_month:02d}/{eth_day:02d}"
         except Exception as e:
             print(f"Error during date conversion: {e}")
             date_str = "Invalid date"
