@@ -45,6 +45,7 @@ from datetime import date, timedelta
 
 from ethiopian_date import EthiopianDateConverter
 from ethio_date_converter import EthiopianDateConverter
+
 import logging
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseBadRequest
@@ -2345,9 +2346,16 @@ def generate_report(request, memo_id, format):
         memo_date = memo.memo_date
         converter = EthiopianDateConverter()
 
-        eth_day, eth_month, eth_year = converter.to_ethiopian(memo_date.year, memo_date.month, memo_date.day)
-        # date_str = f"{eth_day:02d}/{eth_month:02d}/{eth_year}"
-        date_str = f"{eth_year:02d}/{eth_month:02d}/{eth_day:02d}"
+        # eth_day, eth_month, eth_year = converter.to_ethiopian(memo_date.year, memo_date.month, memo_date.day)
+        # # date_str = f"{eth_day:02d}/{eth_month:02d}/{eth_year}"
+        # date_str = f"{eth_year:02d}/{eth_month:02d}/{eth_day:02d}"
+
+        try:
+            eth_day, eth_month, eth_year = converter.to_ethiopian(memo_date.year, memo_date.month, memo_date.day)
+            date_str = f"{eth_year}/{eth_month:02d}/{eth_day:02d}"
+        except Exception as e:
+            print(f"Error during date conversion: {e}")
+            date_str = "Invalid date"
 
 
         from_field = 'ከ:'
