@@ -714,10 +714,10 @@ def memo_detail(request, pk, list_name=None):
     converter = EthiopianDateConverter()
     try:
         eth_day, eth_month, eth_year = converter.to_ethiopian(memo_date.year, memo_date.month, memo_date.day)
-        date_str = f"{eth_year}/{eth_month:02d}/{eth_day:02d}"
+        eth_date_str = f"{eth_year}/{eth_month:02d}/{eth_day:02d}"
     except Exception as e:
         print(f"Error during date conversion: {e}")
-        date_str = "Invalid date"
+        eth_date_str = "Invalid date"
 
     return render(request, 'memotracker/memo_detail.html', {
         'memo': memo,
