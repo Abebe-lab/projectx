@@ -46,10 +46,10 @@
                 <input type="checkbox" class="form-check-input" id="approved" name="elements" value="approved" {% if 'approved' in preferences %}checked{% endif %}>
                 <label class="form-check-label" for="approved">Approved</label>
               </div>
-              <div class="form-check">
-                <input type="checkbox" class="form-check-input" id="closed" name="elements" value="closed" {% if 'closed' in preferences %}checked{% endif %}>
-                <label class="form-check-label" for="closed">Closed</label>
-              </div>
+<!--              <div class="form-check">-->
+<!--                <input type="checkbox" class="form-check-input" id="closed" name="elements" value="closed" {% if 'closed' in preferences %}checked{% endif %}>-->
+<!--                <label class="form-check-label" for="closed">Closed</label>-->
+<!--              </div>-->
               <div class="form-check">
                 <input type="checkbox" class="form-check-input" id="myfiles" name="elements" value="myfiles" {% if 'myfiles' in preferences %}checked{% endif %}>
                 <label class="form-check-label" for="myfiles">My Files</label>
@@ -59,7 +59,8 @@
                 <label class="form-check-label" for="graph">Graph</label>
               </div>
             </div>
-            <button type="submit" class="btn btn-primary btn-block">Save Preferences</button>
+
+            <button type="submit" class="btn btn-primary btn-block" style="width: 150px; height: 40px;">Save Preferences</button>
           </form>
         </div>
       </div>
