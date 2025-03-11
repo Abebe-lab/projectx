@@ -51,10 +51,9 @@
                     <a href="{% url 'outgoing_memo_list' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
                 </div>
             </div>
-        </div> <!-- Closing the first row -->
+        </div>
 
-        <div class="row"> <!-- Opening the second row -->
-            <!-- This row now starts fresh, ensuring equal rows -->
+        <div class="row">
             {% if 'external' in preferences %}
             <div class="col-lg-3 col-6">
                 <div class="small-box bg-pink">
@@ -101,18 +100,18 @@
             {% endif %}
 
             {% if 'closed' in preferences %}
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-danger">
-                    <div class="inner">
-                        <h3>{{ closed_memo_count }}</h3>
-                        <p>Closed</p>
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-danger">
+                        <div class="inner">
+                            <h3>{{ memos_sent_count }}</h3>
+                            <p>Memo sent to DMS</p>
+                        </div>
+                        <div class="icon">
+                            <i class="ion ion-person-add"></i>
+                        </div>
+                        <a href="{% url 'list_in_dms' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
                     </div>
-                    <div class="icon">
-                        <i class="ion ion-person-add"></i>
-                    </div>
-                    <a href="{% url 'closed_memo_list' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
                 </div>
-            </div>
             {% endif %}
 
             {% if 'myfiles' in preferences %}
@@ -193,8 +192,8 @@
                 borderWidth: 1,
                 barThickness: 12,
             }, {
-                label: 'Closed',
-                data: Object.values(memoCountsData).map(entry => entry.closed_count),
+                label: 'Memo sent to DMS',
+                data: Object.values(memoCountsData).map(entry => entry.memos_sent_count),
                 backgroundColor: 'rgba(255, 0, 0, 0.8)',  // Bright red with 80% opacity
                 borderColor: 'rgba(54, 162, 235, 1)',
                 borderWidth: 1,

@@ -19,10 +19,8 @@ urlpatterns = [
     path('forgot_password/', views.forgot_password, name='forgot_password'),
     path('password_reset/', CustomResetPasswordView.as_view(), name='password_reset'),
     path('accept_pin/', views.accept_pin, name='accept_pin'),
-
     path('forgot_pin/', views.forgot_pin, name='forgot_pin'),
     path('reset_pin/<str:username>/', views.reset_pin, name='reset_pin'),
-
 
     # Other URL patterns
 ]

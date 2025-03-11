@@ -6,16 +6,16 @@ from django.urls import reverse_lazy
 from django.contrib.auth.views import LoginView
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordResetForm
-from django.contrib.auth.views import PasswordResetView
-from django.contrib.auth.forms import PasswordChangeForm
+
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import PasswordChangeForm
 
 import user
 from dms.models import Document
 from django.contrib import messages
+
+from dms.views import count_memos_sent_to_dms
 from organogram.models import Profile
 from django.contrib.auth.decorators import login_required  # Import login_required decorator
 from django.shortcuts import render, redirect
@@ -72,12 +72,9 @@ def dashboard(request):
     else:
         # outgoing_memo_count = all_memos.filter(Q(created_by=request.user) | Q(assigned_to=request.user)).exclude(status__in=["draft", "closed"]).count()
 
-        #############################
         outgoing_memo_count = all_memos.filter(created_by=request.user).exclude(status__in=["draft", "closed"]).count()
 
-        #############################
     memo_ids = get_memo_route(request, ["reversed"])
-
     # Count the number of incoming memos
     app_label = 'organogram'
     model_name = 'businessunit'
@@ -95,21 +92,6 @@ def dashboard(request):
         ~Q(public=True, created_by=request.user)
     ).exclude(Q(status__in=excluded_statuses)).count()
 
-    #####################
-
-    # incoming_memo_count = Memo.objects.filter(
-    #     (
-    #             Q(id__in=memo_ids) |
-    #             Q(public=True, created_date__gte=user_creation_time) |
-    #             Q(assigned_to=request.user)
-    #     ) &
-    #     (
-    #             Q(content_type_id=content_type_id) |
-    #             Q(content_type_id=content_type_user)
-    #     ) &
-    #     ~Q(public=True, created_by=request.user)
-    # ).exclude(Q(status__in=excluded_statuses)).count()
-    #####################
 
     external_content_type = ContentType.objects.get(app_label='organogram', model='externalcustomer')
     external_memo_count = Memo.objects.filter(
@@ -127,6 +109,8 @@ def dashboard(request):
     my_files_count = Document.objects.filter(
         Q(uploaded_by_id=user_id) | Q(shared_documents__shared_with=request.user)
     ).distinct().count()
+
+    memos_sent_count = count_memos_sent_to_dms(user)  # Call the method here
 
     current_year = timezone.now().year
     current_month = timezone.now().month
@@ -176,6 +160,7 @@ def dashboard(request):
             'approved_memo_count': approved_memo_count,
             'closed_memo_count': closed_memo_count,
             'my_files_count': my_files_count,
+            'memos_sent_count': memos_sent_count,  # Include the count in context
             'memo_counts_data': memo_counts_data,
         }
         return render(request, 'user/dashboard.html', context)
@@ -462,3 +447,5 @@ def reset_pin(request, username):
         return JsonResponse({'success': True})
 
     return render(request, 'user/reset_pin.html', {'username': username, 'error': None})
+
+

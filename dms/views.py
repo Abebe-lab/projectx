@@ -292,34 +292,9 @@ def send_memo_to_dms(request, memo_id):
     page_obj = paginate_memos(request, memo_details)
     return render(request, 'dms/memo_sent_to_dms.html', {'memo': memo, 'page_obj': page_obj})
 
-# @login_required
-# def send_memo_to_dms(request, memo_id):
-#     memo = get_object_or_404(Memo, id=memo_id)
-#
-#     # Check if there is a MemoRoute with the status 'seen' for the given memo
-#     seen_route = MemoRoute.objects.filter(memo=memo, status='seen').exists()
-#
-#     if not seen_route:
-#         # Instead of returning a JSON response, return a redirect URL
-#         return JsonResponse({
-#             'success': False,
-#             'message': "This memo has not been seen. Cannot send to DMS.",
-#             'redirect_url': reverse('memo_detail', args=[memo.id])  # Redirect URL
-#         })
-#
-#     memo_details = MemoToDMS.objects.filter(memo=memo) and Memo.objects.filter(public=True)
-#
-#     if request.method == "POST":
-#         existing_memo = MemoToDMS.objects.filter(memo=memo).exists()
-#
-#         if existing_memo:
-#             return JsonResponse({'success': False, 'message': "This memo has already been sent to DMS."})
-#         else:
-#             memo_detail = MemoToDMS(memo=memo, sent_by=request.user)
-#             memo_detail.save()
-#             return JsonResponse({'success': True, 'message': "Memo has been sent to DMS successfully."})
-#
-#     return render(request, 'dms/memo_sent_to_dms.html', {'memo': memo, 'memo_details': memo_details})
+def count_memos_sent_to_dms(user):
+    return MemoToDMS.objects.filter(sent_by=user).count()
+
 @login_required
 def list_in_dms(request):
     search_query = request.GET.get('search', '')
@@ -342,4 +317,5 @@ def list_in_dms(request):
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return render(request, 'dms/searched_memo_results.html', {'page_obj': page_obj})
     return render(request, 'dms/memo_sent_to_dms.html', {'page_obj': page_obj, 'search_query': search_query})
+
 
