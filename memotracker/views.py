@@ -1964,13 +1964,16 @@ def generate_report(request, memo_id, format):
     source_bu = created_by_role.business_unit
 
     # Retrieve the source signature
-    if source_bu.bu_signature:
-        try:
-            source_signature_path = source_bu.bu_signature.path
-            with open(source_signature_path, 'rb') as img_file:
-                source_signature = base64.b64encode(img_file.read()).decode('utf-8')
-        except FileNotFoundError:
-            source_signature = None
+    if user_role.role.is_manager or user_role.deligated:
+        if source_bu.bu_signature:
+            try:
+                source_signature_path = source_bu.bu_signature.path
+                with open(source_signature_path, 'rb') as img_file:
+                    source_signature = base64.b64encode(img_file.read()).decode('utf-8')
+            except FileNotFoundError:
+                source_signature = None
+    else:
+        source_signature = ""
 
     type_user = ContentType.objects.get(app_label='auth', model='user')
     type_bu = ContentType.objects.get(app_label='organogram', model='businessunit')
@@ -2169,7 +2172,6 @@ def generate_report(request, memo_id, format):
                 'source_signature': source_signature,
                 'source_bu': source_bu,
                 'memo': memo,
-                # 'bu_code': source_bu.code  # Ensure to pass the correct business unit code
             }
 
             # Render the PDF
