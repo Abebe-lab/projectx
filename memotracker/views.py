@@ -43,7 +43,7 @@ import io, pytz
 from notification.models import Notification, NotificationType, NotificationRecipient
 from datetime import date, timedelta
 
-from ethiopian_date import EthiopianDateConverter
+# from ethiopian_date import EthiopianDateConverter
 from ethio_date_converter import EthiopianDateConverter
 
 import logging
@@ -1937,7 +1937,6 @@ def update_attached_memos(request):
 #         )
 #     ''', [user.id, user.id])
 #     return memos
-
 
 
 # returns memos either written by the current user or sent to the current user
