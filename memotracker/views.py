@@ -655,17 +655,38 @@ def memo_detail(request, pk, list_name=None):
             external_item = {"name": external, "type": "External", "status": route.status}
             (cc_list if route.carbon_copy else direct_list).append(external_item)
 
+        # elif route.destination_type == type_user:
+        #     to_user = UserRole.objects.get(user_id=route.destination_id)
+        #     try:
+        #         profile = Profile.objects.get(user_id=route.destination_id)
+        #         full_name = profile.full_name if profile.full_name else f"{to_user.user.first_name} {to_user.user.last_name}"
+        #     except ObjectDoesNotExist:
+        #         full_name = f"{to_user.user.first_name} {to_user.user.last_name}"
+        #
+        #     bu_name = to_user.business_unit.name_en if memo.in_english else to_user.business_unit.name_am
+        #     user_item = {"name": f"{full_name} [{bu_name}]", "type": "User", "status": route.status}
+        #     (cc_list if route.carbon_copy else direct_list).append(user_item)
+    #############################
         elif route.destination_type == type_user:
             to_user = UserRole.objects.get(user_id=route.destination_id)
             try:
                 profile = Profile.objects.get(user_id=route.destination_id)
-                full_name = profile.full_name if profile.full_name else f"{to_user.user.first_name} {to_user.user.last_name}"
+
+                # Check if the content is in English and use the appropriate full name
+                if memo.in_english:
+                    full_name = profile.full_name if profile.full_name else f"{to_user.user.first_name} {to_user.user.last_name}"
+                else:
+                    full_name = profile.full_name_am if profile.full_name_am else f"{to_user.user.first_name} {to_user.user.last_name}"
+
             except ObjectDoesNotExist:
                 full_name = f"{to_user.user.first_name} {to_user.user.last_name}"
 
+            # Determine the business unit name based on the language
             bu_name = to_user.business_unit.name_en if memo.in_english else to_user.business_unit.name_am
             user_item = {"name": f"{full_name} [{bu_name}]", "type": "User", "status": route.status}
             (cc_list if route.carbon_copy else direct_list).append(user_item)
+        ###############################
+
 
         else:
             bu = BusinessUnit.objects.get(pk=route.destination_id)
@@ -1964,16 +1985,31 @@ def generate_report(request, memo_id, format):
     source_bu = created_by_role.business_unit
 
     # Retrieve the source signature
+    # if user_role.role.is_manager or user_role.deligated:
+    #     if source_bu.bu_signature:
+    #         try:
+    #             source_signature_path = source_bu.bu_signature.path
+    #             with open(source_signature_path, 'rb') as img_file:
+    #                 source_signature = base64.b64encode(img_file.read()).decode('utf-8')
+    #         except FileNotFoundError:
+    #             source_signature = None
+    # else:
+    #     source_signature = ""
+
     if user_role.role.is_manager or user_role.deligated:
-        if source_bu.bu_signature:
+        if source_bu and source_bu.bu_signature:
             try:
                 source_signature_path = source_bu.bu_signature.path
                 with open(source_signature_path, 'rb') as img_file:
                     source_signature = base64.b64encode(img_file.read()).decode('utf-8')
             except FileNotFoundError:
                 source_signature = None
+        else:
+            source_signature = ""
     else:
-        source_signature = ""
+        # If source_bu is not provided, ensure source_signature is not kept
+        if not source_bu:
+            source_signature = ""
 
     type_user = ContentType.objects.get(app_label='auth', model='user')
     type_bu = ContentType.objects.get(app_label='organogram', model='businessunit')
@@ -1984,7 +2020,9 @@ def generate_report(request, memo_id, format):
             full_name = to_user.user.first_name + ' ' + to_user.user.last_name
             if not memo.in_english:
                 profile = Profile.objects.get(user=to_user.user)
-                full_name = profile.full_name if profile and profile.full_name else full_name
+                # full_name = profile.full_name if profile and profile.full_name else full_name
+                full_name = profile.full_name_am if profile and profile.full_name_am else full_name  # Use Amharic name
+
             user = f"{full_name} [{to_user.business_unit.name_am if not memo.in_english else to_user.business_unit.name_en}]"
             (cc_list if route.carbon_copy else direct_list).append(user)
 
@@ -2051,10 +2089,29 @@ def generate_report(request, memo_id, format):
         referenceNumber = 'ቁጥር:'
         date = 'ቀን:'
         cc = 'ግልባጭ:'
-        if memo.content_type.model == 'user':
-            business_unit_created_by = memo.created_by.first_name + ' ' + memo.created_by.last_name
-        else:
-            business_unit_created_by = [user_role.business_unit.name_am for user_role in user_roles][0]
+        # if memo.content_type.model == 'user':
+        #     # business_unit_created_by = profile.full_name_am
+        #     business_unit_created_by = memo.created_by.first_name + ' ' + memo.created_by.last_name
+        # else:
+        #     business_unit_created_by = [user_role.business_unit.name_am for user_role in user_roles][0]
+   #####################################
+    if memo.content_type.model == 'user':
+        # Attempt to get the user's profile
+        try:
+            profile = Profile.objects.get(user_id=memo.created_by.id)
+
+            # Check if the content is in English and use the appropriate full name
+            if memo.in_english:
+                business_unit_created_by = profile.full_name if profile.full_name else f"{memo.created_by.first_name} {memo.created_by.last_name}"
+            else:
+                business_unit_created_by = profile.full_name_am if profile.full_name_am else f"{memo.created_by.first_name} {memo.created_by.last_name}"
+
+        except ObjectDoesNotExist:
+            business_unit_created_by = f"{memo.created_by.first_name} {memo.created_by.last_name}"
+
+    else:
+        business_unit_created_by = [user_role.business_unit.name_am for user_role in user_roles][0]
+        ########################################
     # Handle PDF generation
 
     if format == 'pdf':

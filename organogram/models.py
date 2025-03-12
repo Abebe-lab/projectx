@@ -137,6 +137,7 @@ class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     full_name = models.CharField(max_length=150, blank=True)
+    full_name_am = models.CharField(max_length=150, blank=True) ########
     pin_code = models.CharField(max_length=128, null=True)
     bio = models.TextField(max_length=500, blank=True)
     birth_date = models.DateField(null=True, blank=True)

@@ -5,6 +5,28 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
+
+# class UserForm(forms.ModelForm):
+#     class Meta:
+#         model = User
+#         fields = ('username', 'email')
+#
+# class ProfileForm(forms.ModelForm):
+#     class Meta:
+#         model = Profile
+#         fields = ('bio', 'profile_picture')
+#         exclude = ('birth_date', 'user')
+#         labels = {
+#             'bio': 'Bio',
+#             'profile_picture': 'Profile',
+#         }
+#     def __init__(self, *args, **kwargs):
+#         super(ProfileForm, self).__init__(*args, **kwargs)
+#         self.fields['bio'].widget.attrs.update({'rows': 6, 'cols': 40})  # Set the size of the textarea
+
+
+# from .models import Profile
+
 class UserForm(forms.ModelForm):
     class Meta:
         model = User
@@ -13,15 +35,18 @@ class UserForm(forms.ModelForm):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ('bio', 'profile_picture')
+        fields = ('bio', 'profile_picture', 'full_name_am')  # Include Amharic name field
         exclude = ('birth_date', 'user')
         labels = {
-            'bio': 'Bio',
-            'profile_picture': 'Profile',
+            'bio': 'Bio (English)',
+            'profile_picture': 'Profile Picture',
+            'full_name_am': 'Full Name (Amharic)',
         }
+
     def __init__(self, *args, **kwargs):
         super(ProfileForm, self).__init__(*args, **kwargs)
-        self.fields['bio'].widget.attrs.update({'rows': 6, 'cols': 40})  # Set the size of the textarea
+        self.fields['bio'].widget.attrs.update({'rows': 6, 'cols': 40})  # Set size for English bio
+
 
 class CustomPasswordChangeForm(PasswordChangeForm):
     def clean_new_password1(self):

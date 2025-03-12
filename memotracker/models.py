@@ -80,7 +80,8 @@ class Memo(models.Model):
             if self.in_english:
                 owner = profile.user.first_name + " " + profile.user.last_name
             else:
-                owner = profile.full_name
+                # owner = profile.full_name_am
+                owner = profile.full_name_am if profile.full_name_am else profile.full_name
         elif self.content_type == ContentType.objects.get(model="businessunit", app_label="organogram"):
             bu = BusinessUnit.objects.get(pk=self.object_id)
             if self.in_english:
