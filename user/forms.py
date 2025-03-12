@@ -24,9 +24,7 @@ from django.utils.translation import gettext_lazy as _
 #         super(ProfileForm, self).__init__(*args, **kwargs)
 #         self.fields['bio'].widget.attrs.update({'rows': 6, 'cols': 40})  # Set the size of the textarea
 
-
-# from .models import Profile
-
+################################
 class UserForm(forms.ModelForm):
     class Meta:
         model = User
@@ -47,7 +45,7 @@ class ProfileForm(forms.ModelForm):
         super(ProfileForm, self).__init__(*args, **kwargs)
         self.fields['bio'].widget.attrs.update({'rows': 6, 'cols': 40})  # Set size for English bio
 
-
+####################
 class CustomPasswordChangeForm(PasswordChangeForm):
     def clean_new_password1(self):
         password1 = self.cleaned_data.get('new_password1')
