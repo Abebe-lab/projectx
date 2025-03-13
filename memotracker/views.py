@@ -1946,15 +1946,13 @@ def update_attached_memos(request):
     return JsonResponse({'error': 'Invalid request'})
 
 
-# returns memos either written by the current user or sent to the current user
-# def get_available_memos(user):
-#     memos = MemoRoute.objects.filter(
-#         Q(from_user=user) | Q(to_user=user)
-#     ).distinct('memo_id')
-#     return memos
+# returns memos created by the current user & sent to the current user
 
 def get_available_memos(user):
-    # Get the content types for User and BusinessUnit
+
+    user_role = UserRole.objects.get(user=user, active=True)
+    business_unit = user_role.business_unit
+
     type_user = ContentType.objects.get(app_label='auth', model='user')
     type_bu = ContentType.objects.get(app_label='organogram', model='businessunit')
 
@@ -1977,12 +1975,10 @@ def get_available_memos(user):
             available_memos.append(memo)
 
     # Include memos sent to business units
-    business_unit_ids = BusinessUnit.objects.values_list('id', flat=True)
 
     business_unit_memos = MemoRoute.objects.filter(
-        destination_type=type_bu,
-        destination_id__in=business_unit_ids
-    ).distinct('memo_id')
+        (Q(destination_type=type_user, destination_id=user.id) |
+         Q(destination_type=type_bu, destination_id=business_unit.id))).distinct('memo_id')
 
     for memo in business_unit_memos:
         if memo.memo_id not in unique_memo_ids:
