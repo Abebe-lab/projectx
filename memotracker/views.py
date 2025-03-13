@@ -735,7 +735,7 @@ def memo_detail(request, pk, list_name=None):
     converter = EthiopianDateConverter()
     try:
         eth_day, eth_month, eth_year = converter.to_ethiopian(memo_date.year, memo_date.month, memo_date.day)
-        eth_date_str = f"{eth_year:02d}/{eth_month:02d}/{eth_day:02d}"
+        eth_date_str = f"{eth_year:02d}/{eth_month:02d}/{eth_day:02d} ዓ.ም"
     except Exception as e:
         print(f"Error during date conversion: {e}")
         eth_date_str = "Invalid date"
@@ -1948,24 +1948,48 @@ def update_attached_memos(request):
 
 # returns memos either written by the current user or sent to the current user
 # def get_available_memos(user):
-#     memos = MemoRoute.objects.raw('''
-#         SELECT * FROM memotracker_memoroute
-#         WHERE id IN (
-#             SELECT MIN(id)
-#             FROM memotracker_memoroute
-#             WHERE from_user_id = %s OR to_user_id = %s
-#             GROUP BY memo_id
-#         )
-#     ''', [user.id, user.id])
+#     memos = MemoRoute.objects.filter(
+#         Q(from_user=user) | Q(to_user=user)
+#     ).distinct('memo_id')
 #     return memos
 
-
-# returns memos either written by the current user or sent to the current user
 def get_available_memos(user):
-    memos = MemoRoute.objects.filter(
-        Q(from_user=user) | Q(to_user=user)
+    # Get the content types for User and BusinessUnit
+    type_user = ContentType.objects.get(app_label='auth', model='user')
+    type_bu = ContentType.objects.get(app_label='organogram', model='businessunit')
+
+    # Use a set to track unique memo IDs
+    unique_memo_ids = set()
+    available_memos = []
+
+    # Fetch memos where the user is the sender (from_user)
+    sent_memos = MemoRoute.objects.filter(from_user=user).distinct('memo_id')
+    for memo in sent_memos:
+        if memo.memo_id not in unique_memo_ids:
+            unique_memo_ids.add(memo.memo_id)
+            available_memos.append(memo)
+
+    # Fetch memos where the user is the recipient (to_user)
+    received_memos = MemoRoute.objects.filter(to_user=user).distinct('memo_id')
+    for memo in received_memos:
+        if memo.memo_id not in unique_memo_ids:
+            unique_memo_ids.add(memo.memo_id)
+            available_memos.append(memo)
+
+    # Include memos sent to business units
+    business_unit_ids = BusinessUnit.objects.values_list('id', flat=True)
+
+    business_unit_memos = MemoRoute.objects.filter(
+        destination_type=type_bu,
+        destination_id__in=business_unit_ids
     ).distinct('memo_id')
-    return memos
+
+    for memo in business_unit_memos:
+        if memo.memo_id not in unique_memo_ids:
+            unique_memo_ids.add(memo.memo_id)
+            available_memos.append(memo)
+
+    return available_memos
 
 @login_required
 def generate_report(request, memo_id, format):
@@ -2057,7 +2081,7 @@ def generate_report(request, memo_id, format):
         converter = EthiopianDateConverter()
         try:
             eth_day, eth_month, eth_year = converter.to_ethiopian(memo_date.year, memo_date.month, memo_date.day)
-            date_str = f"{eth_year:02d}/{eth_month:02d}/{eth_day:02d}"
+            date_str = f"{eth_year:02d}/{eth_month:02d}/{eth_day:02d} ዓ.ም"
         except Exception as e:
             print(f"Error during date conversion: {e}")
             date_str = "Invalid date"
