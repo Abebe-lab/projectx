@@ -133,7 +133,6 @@ def list_all_memo(request):
         'listName': 'List of Memo'
     })
 
-
 # Draft memo list
 @login_required
 @permission_required('Draft Memo')
@@ -420,9 +419,8 @@ def outgoing_memo_list(request):
         memos = all_memos
     else:
         # memos = all_memos.filter(Q(created_by=current_user) | Q(assigned_to=current_user))
-        #############################
         memos = all_memos.filter(created_by=current_user)
-        #############################
+
     memos = filter_memos(request, memos)
     page_obj = paginate_memos(request, memos)
     business_units = BusinessUnit.objects.all()
@@ -602,38 +600,6 @@ def closed_memo_list(request):
         'listName': 'Closed Memo',
     })
 
-
-# def to_ethiopian(year, month, day):
-#     # Calculate the Ethiopian date from the Gregorian date
-#     # Determine if the Gregorian year is a leap year
-#     is_gregorian_leap_year = (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)
-#
-#     # Days in each month of the Gregorian calendar
-#     days_in_gregorian_months = [31, 28 + (1 if is_gregorian_leap_year else 0), 31, 30, 31, 30,
-#                                 31, 31, 30, 31, 30, 31]
-#
-#     # Calculate the total days from the start of the Gregorian year
-#     day_of_year = sum(days_in_gregorian_months[:month - 1]) + day
-#
-#     # Ethiopian year starts on Meskerem 1
-#     # Gregorian year starts on January 1
-#     if month < 9 or (month == 9 and day < 11):
-#         eth_year = year - 8  # Ethiopian year is 8 years behind
-#     else:
-#         eth_year = year - 7  # Ethiopian year is 7 years behind
-#
-#     # Calculate Ethiopian day and month
-#     if day_of_year > 254:  # After September 11
-#         eth_day_of_year = day_of_year - 254  # 254 days from January 1 to September 10
-#     else:
-#         eth_day_of_year = day_of_year + (365 if is_gregorian_leap_year else 364) - 254
-#
-#     # Ethiopian months have 30 days for the first 13 months
-#     eth_month = (eth_day_of_year - 1) // 30 + 1
-#     eth_day = (eth_day_of_year - 1) % 30 + 1
-#
-#     return eth_day, eth_month, eth_year
-
 @login_required
 def memo_detail(request, pk, list_name=None):
     user_role = UserRole.objects.get(user=request.user, active=True)
@@ -655,18 +621,6 @@ def memo_detail(request, pk, list_name=None):
             external_item = {"name": external, "type": "External", "status": route.status}
             (cc_list if route.carbon_copy else direct_list).append(external_item)
 
-        # elif route.destination_type == type_user:
-        #     to_user = UserRole.objects.get(user_id=route.destination_id)
-        #     try:
-        #         profile = Profile.objects.get(user_id=route.destination_id)
-        #         full_name = profile.full_name if profile.full_name else f"{to_user.user.first_name} {to_user.user.last_name}"
-        #     except ObjectDoesNotExist:
-        #         full_name = f"{to_user.user.first_name} {to_user.user.last_name}"
-        #
-        #     bu_name = to_user.business_unit.name_en if memo.in_english else to_user.business_unit.name_am
-        #     user_item = {"name": f"{full_name} [{bu_name}]", "type": "User", "status": route.status}
-        #     (cc_list if route.carbon_copy else direct_list).append(user_item)
-    #############################
         elif route.destination_type == type_user:
             to_user = UserRole.objects.get(user_id=route.destination_id)
             try:
@@ -685,8 +639,6 @@ def memo_detail(request, pk, list_name=None):
             bu_name = to_user.business_unit.name_en if memo.in_english else to_user.business_unit.name_am
             user_item = {"name": f"{full_name} [{bu_name}]", "type": "User", "status": route.status}
             (cc_list if route.carbon_copy else direct_list).append(user_item)
-        ###############################
-
 
         else:
             bu = BusinessUnit.objects.get(pk=route.destination_id)
@@ -895,7 +847,7 @@ def create_memo(request):
                     message = f"Memo Saving Failed: {str(e)}"
             elif 'approval_send' in request.POST:
                 try:
-                    memo.status = 'draft'  # Set the status to 'draft'
+                    memo.status = 'draft'
                     memo.reference_number = f"{memo.reference_number}-{str(datetime.today().time().hour)}:{str(datetime.today().time().minute)}:{str(datetime.today().time().second)}"
                     memo.save()
 
@@ -920,8 +872,6 @@ def create_memo(request):
     else:
         # form = MemoForm(user_id=user_role.user.id, bunit_id=user_role.business_unit.id)
         form = MemoForm(user=request.user, bunit_id=bu.id)  # Pass the current user and business unit ID
-
-    # ethDate = ethiopianDateFormatter(datetime.today())
 
     return render(request, 'memotracker/create_memo.html', {
         'form': form,
@@ -1087,12 +1037,12 @@ def save_memo_route(request, memo):
     to_external_cc_list = request.POST.get('external_carbon_copy_list').split(",")
     to_user_cc_list = request.POST.get('carbon_copy_list').split(",")
     to_bu_cc_list = request.POST.get('bu_carbon_copy_list').split(",")
-    #################
+
     # Get the assigned user ID from the form
     assigned_to_id = request.POST.get('assigned_to')
     if assigned_to_id:
         to_user_list.append(assigned_to_id)  # Add the assigned user to the to_user_list
-    ################
+
     form_data = request.POST.copy()
     user_role = UserRole.objects.get(user=request.user, active=True)
     manager = user_role.role.is_manager
@@ -1104,24 +1054,35 @@ def save_memo_route(request, memo):
         month = datetime.today().month
         today_day = datetime.today().day
 
-        if month < 9:
-            eth_year = year - 8
-        elif month >= 9:
-            if month == 9:
-                if today_day in range(1, 12):
-                    eth_year = year - 8
-                    if eth_year % 4 == 3:
-                        if today_day not in range(1, 12):
-                            eth_year = year - 7
-                    else:
-                        if today_day not in range(1, 11):
-                            eth_year = year - 7
-                else:
-                    eth_year = year - 7
-            else:
-                eth_year = year - 7
+        # if month < 9:
+        #     eth_year = year - 8
+        # elif month >= 9:
+        #     if month == 9:
+        #         if today_day in range(1, 12):
+        #             eth_year = year - 8
+        #             if eth_year % 4 == 3:
+        #                 if today_day not in range(1, 12):
+        #                     eth_year = year - 7
+        #             else:
+        #                 if today_day not in range(1, 11):
+        #                     eth_year = year - 7
+        #         else:
+        #             eth_year = year - 7
+        #     else:
+        #         eth_year = year - 7
+
+
+        converter = EthiopianDateConverter()
+        try:
+            eth_day, eth_month, eth_year = converter.to_ethiopian(year, month, today_day)
+            date_str = f"{eth_year:02d}/{eth_month:02d}/{eth_day:02d}"
+        except Exception as e:
+            print(f"Error during date conversion: {e}")
+            date_str = "Invalid date"
+
 
         memo_year = str(date.today().year) if memo.in_english else eth_year
+
         if memo.content_type != ContentType.objects.get(model='user'):
             bu = user_role.business_unit
             bu_reference_code = f'IPDC/{bu.code}' if memo.in_english else f'ኢፓልኮ/{bu.code}'
@@ -1514,7 +1475,6 @@ def edit_memo_route(request, pk):
         return render(request, 'memotracker/memo_route_form.html',
                       {'form': form, 'title': 'Sending Memo', 'cancel_btn_url': 'memo_route_history'})
 
-
 @login_required
 def delete_memo_route(request, list_name):
     pk = request.POST.get('id')
@@ -1708,12 +1668,11 @@ def edit_memo(request, memo_id):
     else:
         form = MemoForm(instance=memo, user_id=user_role.user.id, bunit_id=user_role.business_unit.id)
 
-    # ethDate = ethiopianDateFormatter(datetime.today())
+
     return render(request, 'memotracker/edit_memo.html', {
         'user_role': user_role,
         'form': form,
         'memo': memo,
-        # 'ethDate': ethDate,
         'last_ref_number': last_ref_number,
         'listName': 'Draft Memo',
         'last_personal_memo_ref_number': last_personal_memo_ref_number,
@@ -1906,16 +1865,6 @@ def memo_route_history(request, memo_id, list_name):
     }
     return render(request, 'memotracker/memohistory_form.html', context)
 
-
-# def memo_forwarder1(all_routes, route, memo_routes):
-#     to_user = User.objects.get(pk=route.destination_id)
-#     forwards = all_routes.filter(from_user=to_user, level=route.level + 1)
-#     if forwards.exists():
-#         for forward in forwards:
-#             item = all_routes.filter(id=forward.id)
-#             memo_routes = memo_routes | item
-#             memo_routes = memo_forwarder1(all_routes, forward, memo_routes)
-#     return memo_routes
 
 def memo_forwarder(all_routes, route, memo_routes):
     user_d_type = ContentType.objects.get(app_label='auth', model='user')
