@@ -2041,29 +2041,24 @@ def generate_report(request, memo_id, format):
         referenceNumber = 'ቁጥር:'
         date = 'ቀን:'
         cc = 'ግልባጭ:'
-        # if memo.content_type.model == 'user':
-        #     # business_unit_created_by = profile.full_name_am
-        #     business_unit_created_by = memo.created_by.first_name + ' ' + memo.created_by.last_name
-        # else:
-        #     business_unit_created_by = [user_role.business_unit.name_am for user_role in user_roles][0]
-   #####################################
-    if memo.content_type.model == 'user':
-        # Attempt to get the user's profile
-        try:
-            profile = Profile.objects.get(user_id=memo.created_by.id)
 
-            # Check if the content is in English and use the appropriate full name
-            if memo.in_english:
-                business_unit_created_by = profile.full_name if profile.full_name else f"{memo.created_by.first_name} {memo.created_by.last_name}"
-            else:
-                business_unit_created_by = profile.full_name_am if profile.full_name_am else f"{memo.created_by.first_name} {memo.created_by.last_name}"
+        if memo.content_type.model == 'user':
+            # Attempt to get the user's profile
+            try:
+                profile = Profile.objects.get(user_id=memo.created_by.id)
 
-        except ObjectDoesNotExist:
-            business_unit_created_by = f"{memo.created_by.first_name} {memo.created_by.last_name}"
+                # Check if the content is in English and use the appropriate full name
+                if memo.in_english:
+                    business_unit_created_by = profile.full_name if profile.full_name else f"{memo.created_by.first_name} {memo.created_by.last_name}"
+                else:
+                    business_unit_created_by = profile.full_name_am if profile.full_name_am else f"{memo.created_by.first_name} {memo.created_by.last_name}"
 
-    else:
-        business_unit_created_by = [user_role.business_unit.name_am for user_role in user_roles][0]
-        ########################################
+            except ObjectDoesNotExist:
+                business_unit_created_by = f"{memo.created_by.first_name} {memo.created_by.last_name}"
+
+        else:
+            business_unit_created_by = [user_role.business_unit.name_am for user_role in user_roles][0]
+
     # Handle PDF generation
 
     if format == 'pdf':
