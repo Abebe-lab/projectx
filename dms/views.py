@@ -264,6 +264,7 @@ def share_document(request, document_id):
         'document_privacy': document_privacy
     })
 
+
 # The method that sends seen memo to DMS
 @login_required
 def send_memo_to_dms(request, memo_id):
