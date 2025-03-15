@@ -1638,11 +1638,10 @@ def approve_memo(request):
     memo.save()
     return redirect('outgoing_memo_list')
 
-
 @login_required
+
 def edit_memo(request, memo_id):
-    user_role = UserRole.objects.get(user=request.user,
-                                     active=True)  # Assuming you have a function to get the user role
+    user_role = UserRole.objects.get(user=request.user, active=True)  # Ensure the user role is active
     bu = user_role.business_unit
     last_bu_ref_number = bu.last_memo_ref_number
     last_ref_number = f'IPDC/{bu.code}/{last_bu_ref_number}/{str(date.today().year)}'
@@ -1653,10 +1652,9 @@ def edit_memo(request, memo_id):
     memo = get_object_or_404(Memo, pk=memo_id)
 
     if request.method == 'POST':
-        form = MemoForm(request.POST, instance=memo, user_id=user_role.user.id, bunit_id=user_role.business_unit.id)
+        form = MemoForm(request.POST, instance=memo, user=request.user, bunit_id=user_role.business_unit.id)
         if form.is_valid():
-            memo = form.save(commit=False)  # don't save the form yet
-            form.save()
+            form.save()  # Save the form
             return redirect('draft_memo_list')
         else:
             message = ''
@@ -1666,8 +1664,7 @@ def edit_memo(request, memo_id):
                     message += f"Error in field '{field}': {error}"
             print(message)
     else:
-        form = MemoForm(instance=memo, user_id=user_role.user.id, bunit_id=user_role.business_unit.id)
-
+        form = MemoForm(instance=memo, user=request.user, bunit_id=user_role.business_unit.id)
 
     return render(request, 'memotracker/edit_memo.html', {
         'user_role': user_role,
@@ -1677,6 +1674,43 @@ def edit_memo(request, memo_id):
         'listName': 'Draft Memo',
         'last_personal_memo_ref_number': last_personal_memo_ref_number,
     })
+# def edit_memo(request, memo_id):
+#     user_role = UserRole.objects.get(user=request.user,
+#                                      active=True)  # Assuming you have a function to get the user role
+#     bu = user_role.business_unit
+#     last_bu_ref_number = bu.last_memo_ref_number
+#     last_ref_number = f'IPDC/{bu.code}/{last_bu_ref_number}/{str(date.today().year)}'
+#
+#     profile = Profile.objects.get(user=request.user)
+#     last_personal_memo_ref_number = f'P{request.user.id}/{profile.last_personal_memo_ref_number}/{str(date.today().year)}'
+#
+#     memo = get_object_or_404(Memo, pk=memo_id)
+#
+#     if request.method == 'POST':
+#         form = MemoForm(request.POST, instance=memo, user_id=user_role.user.id, bunit_id=user_role.business_unit.id)
+#         if form.is_valid():
+#             memo = form.save(commit=False)  # don't save the form yet
+#             form.save()
+#             return redirect('draft_memo_list')
+#         else:
+#             message = ''
+#             print('Failed to save memo')
+#             for field, errors in form.errors.items():
+#                 for error in errors:
+#                     message += f"Error in field '{field}': {error}"
+#             print(message)
+#     else:
+#         form = MemoForm(instance=memo, user_id=user_role.user.id, bunit_id=user_role.business_unit.id)
+#
+#
+#     return render(request, 'memotracker/edit_memo.html', {
+#         'user_role': user_role,
+#         'form': form,
+#         'memo': memo,
+#         'last_ref_number': last_ref_number,
+#         'listName': 'Draft Memo',
+#         'last_personal_memo_ref_number': last_personal_memo_ref_number,
+#     })
 
 
 @login_required
