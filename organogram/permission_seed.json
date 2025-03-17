@@ -150,7 +150,7 @@
       "description": "",
       "display_name": "Memo History",
       "icon": "bi-send-check-fill",
-      "url": "memotracker/memohistory",
+      "url": "memotracker/history",
       "parent": 4,
       "order": 3
     }

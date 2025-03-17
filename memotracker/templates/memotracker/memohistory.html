@@ -36,7 +36,7 @@
                     <td>{{ memo.reference_number }}</td>
                     <td>{{ memo.subject }}</td>
                     <td>{{ memo.created_by.first_name }} {{ memo.created_by.last_name }}</td>
-                    <td><a href="{% url 'memohistory_detail' memo.id %}">Track the Memo</a></td>
+                    <td><a href="{% url 'memohistory_detail' memo.id %}">Tracking History</a></td>
                     <!-- Add other desired columns -->
                 </tr>
             {% endfor %}
