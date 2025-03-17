@@ -148,9 +148,9 @@
       "id": 11,
       "name": "sent",
       "description": "",
-      "display_name": "Sent Memo",
+      "display_name": "Memo History",
       "icon": "bi-send-check-fill",
-      "url": "memotracker/sent_memo_list",
+      "url": "memotracker/memohistory",
       "parent": 4,
       "order": 3
     }

@@ -167,7 +167,8 @@
                     {% for route in memo_routes %}
                         <tr>
                             <td>{{ route.from_user.first_name }} {{ route.from_user.last_name }}</td>
-                            <td>{{ route.to_user.first_name }} {{ route.to_user.last_name }}</td>
+                            {#<td>{{ route.to_user.first_name }} {{ route.to_user.last_name }}</td>#}
+                            <td>{{ route.get_destination }}
                             <td>{{ route.date_sent }}</td>
                             <td>{{ route.date_viewed }}</td>
                             <td>{{ route.remark }}</td>
