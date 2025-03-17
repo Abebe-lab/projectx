@@ -262,7 +262,7 @@ def share_document(request, document_id):
 
     # Adding business unit names to users
     for user in users:
-        user.business_unit_name = business_units.get(user.id, None)
+        user.business_unit_code = business_units.get(user.id, None)
 
     return render(request, 'dms/document_share.html', {
         'document': document,
