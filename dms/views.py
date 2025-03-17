@@ -227,42 +227,86 @@ def document_details(request, pk):
 @login_required
 def share_document(request, document_id):
     document = get_object_or_404(Document, id=document_id)
-    # Initialize document_privacy to handle both GET and POST requests
     document_privacy = document.privacy
+
     if request.method == 'POST':
         shared_with_ids = request.POST.getlist('shared_with')
-        # Check if no users were selected
         if not shared_with_ids:
             messages.error(request, "Please select at least one user to share the document with.")
             return render(request, 'dms/document_share.html', {
                 'document': document,
                 'users': User.objects.exclude(id=request.user.id),
-                'document_privacy': document_privacy
+                'document_privacy': document_privacy,
+                'business_units': {},  # Pass an empty dictionary for GET
             })
-        already_shared_users = []  # To keep track of users already shared with
-        # Check for already shared documents before creating new entries
+
+        already_shared_users = []
         for user_id in shared_with_ids:
             user = get_object_or_404(User, id=user_id)
             if SharedDocument.objects.filter(document=document, shared_with=user).exists():
-                already_shared_users.append(user.username)  # Collect already shared usernames
-                continue  # Skip creating a new entry for this user
-            # Create SharedDocument entry only if not already shared
+                already_shared_users.append(user.username)
+                continue
             SharedDocument.objects.get_or_create(document=document, shared_with=user)
-        # Handle messages for already shared users
+
         if already_shared_users:
             for username in already_shared_users:
                 messages.warning(request, f"Document already shared with {username}.")
         else:
             messages.success(request, "Document shared successfully!")
-        return redirect('index')  # Redirect to a success page or the index
+        return redirect('index')
 
-    # For GET request, display the share document form
-    users = User.objects.exclude(id=request.user.id)  # Exclude the current user from the list
+    # For GET request, gather business units
+    users = User.objects.exclude(id=request.user.id)
+    user_roles = UserRole.objects.filter(user__in=users)
+    business_units = {user_role.user.id: user_role.business_unit.code for user_role in user_roles}
+
+    # Adding business unit names to users
+    for user in users:
+        user.business_unit_name = business_units.get(user.id, None)
+
     return render(request, 'dms/document_share.html', {
         'document': document,
         'users': users,
-        'document_privacy': document_privacy
+        'document_privacy': document_privacy,
     })
+# def share_document(request, document_id):
+#     document = get_object_or_404(Document, id=document_id)
+#     # Initialize document_privacy to handle both GET and POST requests
+#     document_privacy = document.privacy
+#     if request.method == 'POST':
+#         shared_with_ids = request.POST.getlist('shared_with')
+#         # Check if no users were selected
+#         if not shared_with_ids:
+#             messages.error(request, "Please select at least one user to share the document with.")
+#             return render(request, 'dms/document_share.html', {
+#                 'document': document,
+#                 'users': User.objects.exclude(id=request.user.id),
+#                 'document_privacy': document_privacy
+#             })
+#         already_shared_users = []  # To keep track of users already shared with
+#         # Check for already shared documents before creating new entries
+#         for user_id in shared_with_ids:
+#             user = get_object_or_404(User, id=user_id)
+#             if SharedDocument.objects.filter(document=document, shared_with=user).exists():
+#                 already_shared_users.append(user.username)  # Collect already shared usernames
+#                 continue  # Skip creating a new entry for this user
+#             # Create SharedDocument entry only if not already shared
+#             SharedDocument.objects.get_or_create(document=document, shared_with=user)
+#         # Handle messages for already shared users
+#         if already_shared_users:
+#             for username in already_shared_users:
+#                 messages.warning(request, f"Document already shared with {username}.")
+#         else:
+#             messages.success(request, "Document shared successfully!")
+#         return redirect('index')  # Redirect to a success page or the index
+#
+#     # For GET request, display the share document form
+#     users = User.objects.exclude(id=request.user.id)  # Exclude the current user from the list
+#     return render(request, 'dms/document_share.html', {
+#         'document': document,
+#         'users': users,
+#         'document_privacy': document_privacy
+#     })
 
 
 # The method that sends seen memo to DMS

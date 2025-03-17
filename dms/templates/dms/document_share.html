@@ -46,8 +46,14 @@
                             <option value="{{ user.id }}">
                                 {% if user.first_name or user.last_name %}
                                     {{ user.first_name }} {{ user.last_name }}
+                                    {% if user.business_unit_name %}
+                                        [{{ user.business_unit_name }}]
+                                    {% endif %}
                                 {% else %}
                                     {{ user.username }}
+                                    {% if user.business_unit_name %}
+                                        [{{ user.business_unit_name }}]
+                                    {% endif %}
                                 {% endif %}
                             </option>
                         {% endfor %}
