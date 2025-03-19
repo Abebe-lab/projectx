@@ -122,7 +122,7 @@
 
     {% if title == 'All Routes' %}
 
-        <h3>Approval Routing Information:</h3>
+        <h3>Approval Routing History:</h3>
         {% if approval_routes %}
             <table>
                 <thead>
@@ -145,11 +145,11 @@
                 </tbody>
             </table>
         {% else %}
-            <p>The memo has no approval routing information so far</p>
+            <p>No approval history available!</p>
         {% endif %}
 
 
-        <h3 class="mt-4">Memo Routing Information:</h3>
+        <h3 class="mt-4">Memo Routing History:</h3>
         {% if memo_routes %}
             <table>
                 <thead>
