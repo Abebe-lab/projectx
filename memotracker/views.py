@@ -713,7 +713,7 @@ def memo_detail(request, pk, list_name=None):
 
 def memohistory(request):
     # Fetch all memos and their routes
-    memos_with_routes = Memo.objects.prefetch_related('memoroute_set').all()
+    memos_with_routes = Memo.objects.prefetch_related('memoroute_set').all().order_by('-memo_date')
     return render(request, 'memotracker/memohistory.html', {'memos_with_routes': memos_with_routes})
 
 

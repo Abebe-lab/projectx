@@ -167,10 +167,15 @@
                     {% for route in memo_routes %}
                         <tr>
                             <td>{{ route.from_user.first_name }} {{ route.from_user.last_name }}</td>
-                            {#<td>{{ route.to_user.first_name }} {{ route.to_user.last_name }}</td>#}
-                            <td>{{ route.get_destination }}
+                            <td>{{ route.get_destination }}</td>
                             <td>{{ route.date_sent }}</td>
-                            <td>{{ route.date_viewed }}</td>
+                            <td>
+                                {% if route.status == 'seen' or route.status == 'forwarded' %}
+                                    {{ route.date_viewed }}
+                                {% else %}
+                                    No view yet
+                                {% endif %}
+                            </td>
                             <td>{{ route.remark }}</td>
                             <td>{{ route.status }}</td>
                             <td>
@@ -179,7 +184,7 @@
                                    title="Edit Memo Route"> <i class="bi bi-pencil-square"></i></a>
                                 <a class="btn btn-hover btn-danger btn-sm {% if route.status != 'notseen' or current_user.id != route.from_user.id %} disabled {% endif %}" href="#"
                                    data-bs-toggle="modal" data-bs-target="#confirmationModal"
-                                   data-bs-action="memo_route_delete" data-record-id="{{  route.id }}"
+                                   data-bs-action="memo_route_delete" data-record-id="{{ route.id }}"
                                    data-modal-body-class="text-danger"
                                    data-bs-title="Memo Forwarding" data-bs-body="Are you sure to delete Memo sent to '{{ route.to_user.first_name }} {{ route.to_user.last_name }}'?">
                                    <i class="bi bi-trash3-fill"></i>
