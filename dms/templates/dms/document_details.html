@@ -9,15 +9,17 @@
 {% block contentTitle %}
     Document Details
 {% endblock %}
+{% block backBtn %}
+<a href="{% url 'index' %}">
+    <strong>
+        <i class="bi bi-arrow-left mx-1"></i> My Files
+    </strong>
+</a>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div class="ms-auto">
-        <a href="{% url 'index' %}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Back
-        </a>
-    </div>
-</div>
+
+<div class="container" style="margin-left: 20px; margin-top: 20px;"> <!-- Adjust the margin values as needed -->
     <p><strong>Title: </strong>{{ document.title }}</p>
     <p><strong>Document Number: </strong>{{ document.document_number }}</p>
     <p><strong>Uploaded by:</strong> {{ document.uploaded_by.first_name }} {{ document.uploaded_by.last_name }}</p>
@@ -25,30 +27,46 @@
     <p><strong>Doc. Owner: </strong>{% if document.owner %}{{ document.get_owner_name }}{% else %} External {% endif %}</p>
     <p><strong>Category: </strong>{{ document.category }}</p>
     <p><strong>Created Date:</strong> {{ document.created_date }}</p>
-    <p><Strong>Uploaded Date:</Strong> {{ document.uploaded_date }}</p>
+    <p><strong>Uploaded Date:</strong> {{ document.uploaded_date }}</p>
 
-    <div class="d-flex gap-3">
+    <div class="d-flex gap-3 mt-3"> <!-- Added margin-top for spacing -->
         <!-- cancel button -->
-    <a href="{% url 'index' %}" class="btn btn-dark download-link"><i class="bi bi-x-circle me-2"></i>Cancel</a>
-
-    {% if document.shared_with and request.user in document.shared_with.all %}
-        <a class="btn btn-warning download-link disabled" title="Edit Document" aria-disabled="true"><i class="bi bi-pencil-square me-2"></i>Edit</a>
-        <a class="btn btn-hover btn-danger disabled" title="Delete Document" aria-disabled="true"><i class="bi bi-trash3-fill me-2"></i>Delete</a>
-    {% else %}
-        <a href="{% url 'document_update' document.id %}" class="btn btn-warning download-link"><i class="bi bi-pencil-square me-2"></i>Edit</a>
-        <a class="btn btn-hover btn-danger" href="#"
-            data-bs-toggle="modal" data-bs-target="#confirmationModal"
-            data-bs-action="document_delete" data-record-id="{{ document.id }}"
-            data-modal-body-class="text-danger"
-            data-bs-title="Delete Document" data-bs-body="Are you sure to delete document '{{ document.subject }}'?">
-            <i class="bi bi-trash3-fill me-2"></i>Delete
+        <a href="{% url 'index' %}" class="btn btn-dark download-link">
+            <i class="bi bi-x-circle me-2"></i>Cancel
         </a>
-    {% endif %}
 
-<a href="{% url 'share_document' document.id %}" class="btn btn-primary download-link"><i class="bi bi-share me-2"></i>Share</a>
-<a href="{{ document.file.url }}" class="btn btn-secondary download-link" download target="_blank"><i class="bi bi-download me-2"></i>Download</a>
-<a href="#" class="open-modal btn btn-info" data-file="{{ document.file.url }}" data-toggle="modal" data-target="#document-modal"><i class="bi bi-binoculars me-2"></i>View</a>
+        {% if document.shared_with and request.user in document.shared_with.all %}
+            <a class="btn btn-warning download-link disabled" title="Edit Document" aria-disabled="true">
+                <i class="bi bi-pencil-square me-2"></i>Edit
+            </a>
+            <a class="btn btn-danger disabled" title="Delete Document" aria-disabled="true">
+                <i class="bi bi-trash3-fill me-2"></i>Delete
+            </a>
+        {% else %}
+            <a href="{% url 'document_update' document.id %}" class="btn btn-warning download-link">
+                <i class="bi bi-pencil-square me-2"></i>Edit
+            </a>
+            <a href="#"
+                class="btn btn-danger"
+                data-bs-toggle="modal" data-bs-target="#confirmationModal"
+                data-bs-action="document_delete" data-record-id="{{ document.id }}"
+                data-modal-body-class="text-danger"
+                data-bs-title="Delete Document" data-bs-body="Are you sure to delete document '{{ document.subject }}'?">
+                <i class="bi bi-trash3-fill me-2"></i>Delete
+            </a>
+        {% endif %}
 
+        <a href="{% url 'share_document' document.id %}" class="btn btn-primary download-link">
+            <i class="bi bi-share me-2"></i>Share
+        </a>
+        <a href="{{ document.file.url }}" class="btn btn-secondary download-link" download target="_blank">
+            <i class="bi bi-download me-2"></i>Download
+        </a>
+        <a href="#" class="open-modal btn btn-info" data-file="{{ document.file.url }}" data-toggle="modal" data-target="#document-modal">
+            <i class="bi bi-binoculars me-2"></i>View
+        </a>
+    </div>
+</div>
     <!-- Modal -->
     <div class="modal fade" id="document-modal" tabindex="-1" role="dialog" aria-labelledby="document-modal-title" aria-hidden="true" style="overflow: auto;">
         <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable" role="document">

@@ -5,9 +5,11 @@
 {% endblock %}
 {% block contentTitle %} Memo Tracking {% endblock %}
 {% block backBtn %}
-    <a href="#" id="backFromHistory" class="icon-link icon-link-hover" >
-        <i class="bi bi-arrow-left mx-1"></i>
-    </a>
+<a href="{% url 'memohistory' %}">
+    <strong>
+        <i class="bi bi-arrow-left mx-1"></i> Memo History
+    </strong>
+</a>
 {% endblock %}
 {% block content %}
 <html>

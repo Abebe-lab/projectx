@@ -8,6 +8,8 @@
 {% endblock %}
 
 {% block content %}
+
+    <div class="container" style="margin-left: 20px; margin-top: 20px;"> <!-- Adjust the margin values as needed -->
     <form method="post" id="shareForm">
         {% csrf_token %}
 
@@ -41,7 +43,9 @@
             <div class="col-md-6">
                 <div class="mb-3">
                     <label for="shared_with"><strong>Share with:</strong></label>
-                    <select name="shared_with" id="shared_with" multiple class="form-select" style="width: 60%; height: 250px;">
+
+                    <select name="shared_with" id="shared_with" multiple class="form-select" style="width: 70%; height: 280px; border: 2px solid black; padding-right: 20px; box-sizing: border-box;">
+
                         {% for user in users %}
                             <option value="{{ user.id }}">
                                 {% if user.first_name or user.last_name %}
@@ -68,7 +72,7 @@
             </div>
         </div>
     </form>
-
+</div>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Display Django messages as alerts
