@@ -8,9 +8,6 @@
 {% endblock %}
 
 {% block content %}
-<html>
-<head>
-    <title>Memo History</title>
     <style>
         table {
             border-collapse: collapse;
@@ -18,38 +15,34 @@
         }
         th, td {
             border: 1px solid #dddddd;
-            text-align: left;
+            text-align: center;
             padding: 8px;
         }
         th {
             background-color: #f2f2f2;
         }
     </style>
-</head>
-<body>
-    {#<h1>Memo History</h1>#}
-    <table>
+    <table class="table table-striped">
         <thead>
             <tr>
+                <th scope="col">S.No</th>  <!-- Added Serial Number Column -->
                 <th>Reference Number</th>
                 <th>Subject</th>
                 <th>Created By</th>
                 <th>Routing Info</th>
-                <!-- Add other desired columns -->
             </tr>
         </thead>
         <tbody>
             {% for memo in memos_with_routes %}
                 <tr>
+                    <td>{{ forloop.counter }}</td>
                     <td>{{ memo.reference_number }}</td>
                     <td>{{ memo.subject }}</td>
                     <td>{{ memo.created_by.first_name }} {{ memo.created_by.last_name }}</td>
                     <td><a href="{% url 'memohistory_detail' memo.id %}">Tracking History</a></td>
-                    <!-- Add other desired columns -->
                 </tr>
             {% endfor %}
         </tbody>
     </table>
-</body>
-</html>
+
 {% endblock %}
