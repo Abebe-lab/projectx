@@ -26,10 +26,10 @@ urlpatterns = [
     # memo details
     path('memo/<int:pk>', views.memo_detail, name='memo_detail'),
     path('memo/<int:pk>/<str:list_name>', views.memo_detail, name='memo_detail'),
-    path('history/', views.memohistory, name='memohistory'),
+    path('memohistory/', views.memohistory, name='memohistory'),
     path('memotracker/<int:memo_id>/', views.memohistory_detail, name='memohistory_detail'),
-    path('history/', views.memohistory, name='memohistory'),
-    path('memotracker/<int:memo_id>/', views.memohistory_detail, name='memohistory_detail'),
+    # path('history/', views.memohistory, name='memohistory'),
+    # path('memotracker/<int:memo_id>/', views.memohistory_detail, name='memohistory_detail'),
     path('create_memo/', views.create_memo, name='create_memo'),
     path('external_memo/', views.external_memo, name='external_memo'),
     path('delete_memo/', views.delete_memo, name='delete_memo'),
