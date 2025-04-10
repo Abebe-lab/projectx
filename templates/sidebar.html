@@ -1,25 +1,19 @@
 {% if user.is_authenticated %}
     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+
         <li class="nav-item has-treeview {% if request.path|slice:'1:12' == 'memotracker' or request.path|slice:'1:12' == '' or request.path|slice:'1:5' == 'user' %}
-                {% if request.path|slice:'13:21' == 'approved' %}
+                {% if 'approved_memo_list' in request.path or 'memohistory' in request.path or 'personal_memo_list' in request.path or 'customer' in request.path %}
                 {% else %}
-                    {% if request.path|slice:'13:19' == 'history' %}
-                        {% else %}
-                            {% if request.path|slice:'13:21' == 'personal' %}
-                            {% else %}
-                                menu-open
-                            {% endif %}
-                        {% endif %}
+                    menu-open
                 {% endif %}
             {% endif %}"
         >
             <a href="#" class="nav-link">
                 <i class="bi bi-envelope-paper-fill menu-icon"></i>
-              {#  <i class="bi bi-envelope-paper-fill mr-1"></i>#}
-              <p>
-                Memo Tracker System
-                <i class="fas fa-angle-left right"></i>
-              </p>
+                <p>
+                    Memo Tracker System
+                    <i class="fas fa-angle-left right"></i>
+                </p>
             </a>
             <ul class="nav nav-treeview">
                 {% for user_role in user.userrole_set.all %}
@@ -100,6 +94,7 @@
                 {% endfor %}
             </ul>
         </li>
+
 
         <li class="nav-item has-treeview {% if request.path|slice:'1:4' == 'dms' %}menu-open{% endif %}">
             <a href="#" class="nav-link">
