@@ -3,7 +3,7 @@
         <li class="nav-item has-treeview {% if request.path|slice:'1:12' == 'memotracker' or request.path|slice:'1:12' == '' or request.path|slice:'1:5' == 'user' %}
                 {% if request.path|slice:'13:21' == 'approved' %}
                 {% else %}
-                    {% if request.path|slice:'13:17' == 'history' %}
+                    {% if request.path|slice:'13:17' == 'sent' %}
                     {% else %}
                         {% if request.path|slice:'13:19' == 'closed' %}
                         {% else %}
@@ -128,7 +128,7 @@
                 </ul>
         </li>
         <li class="nav-item has-treeview {% if request.path|slice:'1:12' == 'memotracker' %}
-                {% if request.path|slice:'13:21' == 'personal' or request.path|slice:'13:21' == 'approved' or request.path|slice:'13:17' == 'history' or request.path|slice:'13:19' == 'closed' %}
+                {% if request.path|slice:'13:21' == 'personal' or request.path|slice:'13:21' == 'approved' or request.path|slice:'13:17' == 'sent' or request.path|slice:'13:19' == 'closed' %}
                     menu-open
                 {% endif %}
             {% elif request.path|slice:'1:11' == 'organogram' %}
