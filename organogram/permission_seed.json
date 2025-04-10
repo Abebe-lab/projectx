@@ -142,19 +142,21 @@
       "order": 2
     }
   },
+
   {
     "model": "organogram.permission",
     "fields": {
-      "id": 11,
-      "name": "sent",
-      "description": "",
-      "display_name": "Memo History",
-      "icon": "bi-send-check-fill",
-      "url": "memotracker/memohistory",
-      "parent": 4,
-      "order": 3
+        "id": 11,
+        "name": "history",
+        "description": "",
+        "display_name": "Memo History",
+        "icon": "bi-clock-history",
+        "url": "memotracker/memohistory",
+        "parent": 4,
+        "order": 3
     }
-  },
+ },
+
   {
     "model": "organogram.permission",
     "fields": {
