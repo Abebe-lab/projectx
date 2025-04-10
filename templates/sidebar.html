@@ -124,36 +124,40 @@
                     {% endfor %}
                 </ul>
         </li>
-        <li class="nav-item has-treeview {% if request.path|slice:'1:12' == 'memotracker' %}
-                {% if request.path|slice:'13:21' == 'personal' or request.path|slice:'13:21' == 'approved' or request.path|slice:'13:19' == 'history' %}
+
+
+        <li class="nav-item has-treeview
+            {% if request.path|slice:'1:12' == 'memotracker' %}
+                {% if 'personal' in request.path or 'approved' in request.path or 'memohistory' in request.path %}
                     menu-open
                 {% endif %}
             {% elif request.path|slice:'1:11' == 'organogram' %}
-                {% if request.path|slice:'12:20' == 'customer' %}
+                {% if 'customer' in request.path %}
                     menu-open
                 {% endif %}
             {% endif %}">
             <a href="#" class="nav-link">
                 <i class="bi bi-clipboard2-data-fill menu-icon"></i>
-              <p>
-                Reports
-                <i class="fas fa-angle-left right"></i>
-              </p>
+                <p>
+                    Reports
+                    <i class="fas fa-angle-left right"></i>
+                </p>
             </a>
             <ul class="nav nav-treeview">
-                    {% for user_role in user.userrole_set.all %}
-                        {% for role_perm in user_role.role.rolepermission_set.all %}
-                            {% if role_perm.permission.parent.code == "rpt" %}
-                                <li class="nav-item">
-                                    <a href="/{{ role_perm.permission.url }}/" class="nav-link">
-                                        &nbsp;&nbsp;&nbsp;<i class="bi {{ role_perm.permission.icon }}"></i>&nbsp;
-                                        <p>{{ role_perm.permission.display_name }}</p>
-                                    </a>
-                                </li>
-                            {% endif %}
-                        {% endfor %}
+                {% for user_role in user.userrole_set.all %}
+                    {% for role_perm in user_role.role.rolepermission_set.all %}
+                        {% if role_perm.permission.parent.code == "rpt" %}
+                            <li class="nav-item">
+                                <a href="/{{ role_perm.permission.url }}/" class="nav-link">
+                                    &nbsp;&nbsp;&nbsp;<i class="bi {{ role_perm.permission.icon }}"></i>&nbsp;
+                                    <p>{{ role_perm.permission.display_name }}</p>
+                                </a>
+                            </li>
+                        {% endif %}
                     {% endfor %}
+                {% endfor %}
             </ul>
         </li>
+
     </ul>
 {% endif %}
