@@ -1742,16 +1742,44 @@ def memo_attachments_list(request, pk):
     })
 
 
+# @login_required
+# def memo_attachment_add(request, memo_id):
+#     memo = Memo.objects.get(id=memo_id)
+#     if request.method == 'POST':
+#         form = MemoAttachmentForm(request.POST, memo_id=memo_id)
+#         if form.is_valid():
+#             # attached_attribute will take the value of the currently logged in user
+#             memo_attachment = form.save(commit=False)
+#             memo_attachment.attached_by = request.user
+#             form.save()
+#             return redirect('memo_detail', memo_id)
+#     else:
+#         form = MemoAttachmentForm(memo_id=memo_id)
+#
+#     return render(request, 'memotracker/memo_attachment_add.html', {
+#         'form': form,
+#         'memo_id': memo_id,
+#         'memo': memo
+#     })
+
 @login_required
 def memo_attachment_add(request, memo_id):
     memo = Memo.objects.get(id=memo_id)
     if request.method == 'POST':
-        form = MemoAttachmentForm(request.POST, memo_id=memo_id)
+        form = MemoAttachmentForm(request.POST, request.FILES, memo_id=memo_id)
         if form.is_valid():
-            # attached_attribute will take the value of the currently logged in user
+            # Check if document was provided
+            if not form.cleaned_data.get('document'):
+                form.add_error('document', 'Please select or upload a document')
+                return render(request, 'memotracker/memo_attachment_add.html', {
+                    'form': form,
+                    'memo_id': memo_id,
+                    'memo': memo
+                })
+
             memo_attachment = form.save(commit=False)
             memo_attachment.attached_by = request.user
-            form.save()
+            memo_attachment.save()
             return redirect('memo_detail', memo_id)
     else:
         form = MemoAttachmentForm(memo_id=memo_id)
@@ -1761,8 +1789,6 @@ def memo_attachment_add(request, memo_id):
         'memo_id': memo_id,
         'memo': memo
     })
-
-
 # delete attachment
 @login_required
 def memo_attachment_delete(request):

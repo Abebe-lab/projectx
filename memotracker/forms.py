@@ -286,18 +286,39 @@ class ApprovalRouteForm(RoutingModelForm):
         fields = ['memo', 'from_user', 'to_user', 'comment']
 
 
+# class MemoAttachmentForm(ModelForm):
+#     class Meta:
+#         model = MemoAttachment
+#         fields = ['document', 'permission', 'remark']
+#         widgets = {
+#             'remark': forms.Textarea(attrs={'rows': 4}),
+#         }
+#
+#     def __init__(self, *args, **kwargs):
+#         memo_id=kwargs.pop('memo_id', None)
+#         super(MemoAttachmentForm, self).__init__(*args, **kwargs)
+#         if memo_id:
+#             self.instance.memo=Memo.objects.get(pk=memo_id)
+#         for field_name, field in self.fields.items():
+#             field.widget.attrs['class'] = 'form-control'
+
 class MemoAttachmentForm(ModelForm):
     class Meta:
         model = MemoAttachment
         fields = ['document', 'permission', 'remark']
         widgets = {
             'remark': forms.Textarea(attrs={'rows': 4}),
+            'permission': forms.Select(attrs={'class': 'form-select'}),
         }
 
     def __init__(self, *args, **kwargs):
-        memo_id=kwargs.pop('memo_id', None)
+        memo_id = kwargs.pop('memo_id', None)
         super(MemoAttachmentForm, self).__init__(*args, **kwargs)
+
         if memo_id:
-            self.instance.memo=Memo.objects.get(pk=memo_id)
+            self.instance.memo = Memo.objects.get(pk=memo_id)
+
+        # Add Bootstrap classes to all fields
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
+            if field_name != 'permission':  # permission already has form-select
+                field.widget.attrs['class'] = 'form-control'

@@ -8,32 +8,36 @@
     <p> <strong> Memo: </strong> <a href="{% url 'memo_detail' memo_id %}">({{memo.reference_number}}) - {{ memo.subject}} </a> </p>
     <p class="mt-5"> <strong> Attachment: </strong> </p>
 
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.media }}
             <label for="id_document" class="col-sm-2 col-form-label">Document</label>
             <div class="row mb-3">
                 <div class="col-9">
                     {{form.document}}
+
                 </div>
                 <div class="col-3 d-flex align-items-center mb-0">
-                   
                     <button type="button" onclick="uploadDocument('{% url 'document_create' %}', 'add_document', 'New document');" class="btn btn-success" data-toggle="modal" data-target="#attachmentModal">
                         <i class="bi bi-file-earmark-plus"></i> Add
                     </button>
                 </div>
-                
+                {% if form.document.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.document.errors.0 }}
+                        </div>
+                    {% endif %}
             </div>
-            
+
             <label for="id_permission" class="col-sm-2 col-form-label">Permission</label>
             <div class="row mb-3">
-                <div class="col-sm-9"> 
+                <div class="col-sm-9">
                     {{form.permission}}
                 </div>
             </div>
             <label for="id_remark" class="col-sm-2 col-form-label">Remark</label>
             <div class="row mb-3">
-                <div class="col-sm-9"> 
+                <div class="col-sm-9">
                     {{form.remark}}
                 </div>
             </div>
@@ -42,27 +46,26 @@
                 <a href="{% url 'memo_attachments_list' memo_id %}" class="btn btn-secondary"><i class="bi bi-x"></i>Cancel</a>
                 <button type="submit" class="btn btn-primary"> <i class="bi bi-paperclip"></i> Attach </button>
             </div>
-        
     </form>
-    
+
    {% include 'modal.html' %}
 
    <script>
-    window.addEventListener('load', function() {
-    const savedDocument = localStorage.getItem('savedDocument');
+        window.addEventListener('load', function() {
+        const savedDocument = localStorage.getItem('savedDocument');
 
-    if (savedDocument) {
-        const cur_doc = document.getElementById('id_document');
-        
-        /* adds the last entry in the select options as the 
-            selected option since it is the most recent
-        */
-        cur_doc.options[cur_doc.options.length-1].selected = true;
-        // Remove savedDocument from localStorage
-        localStorage.removeItem('savedDocument');
-    }
-});
+        if (savedDocument) {
+            const cur_doc = document.getElementById('id_document');
+
+            /* adds the last entry in the select options as the
+                selected option since it is the most recent
+            */
+            cur_doc.options[cur_doc.options.length-1].selected = true;
+            // Remove savedDocument from localStorage
+            localStorage.removeItem('savedDocument');
+        }
+    });
    </script>
-  
+
 {% endblock %}
 </div>
