@@ -38,7 +38,7 @@
                                     <select name="customer" id="id_content_type" class="form-select" required>
                                         <option value="" selected disabled>Select Customer</option>
                                         {% for customer in org_list %}
-                                            <option value="{{ customer.id }}" {% if form.customer.value == customer.id %}selected{% endif %}>{{ customer.name_en }}</option>
+                                            <option value="{{ customer.id }}" {% if form.customer.value == customer.id %}selected{% endif %}>{{ customer.name_am }} - {{ customer.name_en }}</option>
                                         {% endfor %}
                                     </select>
                                     <a href="{% url 'add_customer' %}" class="btn btn-primary ms-2" style="width: 230px;">
