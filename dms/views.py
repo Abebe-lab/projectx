@@ -275,12 +275,20 @@ def share_document(request, document_id):
 def send_memo_to_dms(request, memo_id):
     memo = get_object_or_404(Memo, id=memo_id)
 
-    is_public = memo.public  # Assuming memo has a 'public' attribute
+    # Assuming memo has a 'public' attribute
+    is_public = memo.public
+
+    # Get the external customer content type
+    ext_d_type = ContentType.objects.get(app_label='organogram', model='externalcustomer')
+
+    # Check if any route has external customer as destination
+    has_external_customer = MemoRoute.objects.filter(memo=memo, destination_type=ext_d_type).exists()
 
     # Check if there is a MemoRoute with the status 'seen' for the given memo
     seen_route = MemoRoute.objects.filter(memo=memo, status='seen').exists()
+    if not is_public and not seen_route and not has_external_customer:
     # if not seen_route:
-    if not is_public and not seen_route:
+    # if not is_public and not seen_route:
         return JsonResponse({
             'success': False,
             'message': "This memo has not been seen. Cannot send to DMS.",
